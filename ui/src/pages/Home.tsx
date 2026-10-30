@@ -1,0 +1,17 @@
+import Hero from "../components/home/Hero";
+import SuperDeals from "../components/home/SuperDeals";
+import OurCombos from "../components/home/OurCombos";
+import WhyChooseUs from "../components/home/WhyChooseUs";
+import Testimonials from "../components/home/Testimonials";
+
+export default function Home() {
+  return (
+    <>
+      <Hero />
+      <SuperDeals />
+      <OurCombos />
+      <WhyChooseUs />
+      <Testimonials />
+    </>
+  );
+}
