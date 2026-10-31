@@ -37,7 +37,7 @@ export default function Hero() {
   return (
     <ScrollReveal>
       <section
-        className="mx-5 my-5 overflow-hidden rounded-2xl"
+        className="mx-5 mb-0 mt-4 overflow-hidden rounded-2xl sm:mb-1"
         aria-label="SM Foods promotional banners"
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}

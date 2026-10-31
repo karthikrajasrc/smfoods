@@ -21,7 +21,7 @@ export default function OurCombos() {
 
   return (
     <ScrollReveal>
-      <section className="mx-auto max-w-[1400px] px-4 py-12 sm:py-16 lg:px-8">
+      <section className="mx-auto max-w-[1400px] px-4 py-6 sm:py-6 lg:px-8">
         <div className="mb-8 text-center sm:mb-10">
           <h2 className="text-2xl font-medium sm:text-3xl md:text-4xl">Our Combos</h2>
           <p className="mt-2 text-muted">Discover our handpicked product combos</p>

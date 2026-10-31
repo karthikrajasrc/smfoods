@@ -1,9 +1,12 @@
+import { brandPhoneHref, useBrandContact } from "../context/BrandContactContext";
+
 const sectionClass = "mt-10";
 const headingClass = "mb-4 text-2xl font-semibold text-paddy";
 const paragraphClass = "mt-4 leading-7 text-[#3b3326]";
 const listClass = "mt-4 list-disc space-y-3 pl-6 leading-7 text-[#3b3326]";
 
 export default function PrivacyPolicy() {
+  const { brandContact } = useBrandContact();
   return (
     <article className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
       <header className="border-b border-line pb-8">
@@ -148,7 +151,7 @@ export default function PrivacyPolicy() {
       <section className={sectionClass}>
         <h2 className={headingClass}>Contact</h2>
         <p className={paragraphClass}>
-          Should you have any questions about our privacy practices or this Privacy Policy, or if you would like to exercise any of the rights available to you, please call <a className="text-paddy underline" href="tel:+918056285895">+91 805 628 5895</a>, email us at <a className="text-paddy underline" href="mailto:smfoods2k25@gmail.com">smfoods2k25@gmail.com</a>, or contact us at 1/145 Indira Nagar 1st Street, Santhospuram, Chennai, TN 600073, India.
+          Should you have any questions about our privacy practices or this Privacy Policy, or if you would like to exercise any of the rights available to you, please call <a className="text-paddy underline" href={brandPhoneHref(brandContact.phone)}>{brandContact.phone}</a>, email us at <a className="text-paddy underline" href={`mailto:${brandContact.email}`}>{brandContact.email}</a>, or contact us at {brandContact.address}.
         </p>
       </section>
     </article>

@@ -18,7 +18,7 @@ export default function Cart() {
         </div>
       ) : (
         <>
-          <div className="mt-8 divide-y divide-line border-y border-line">
+          <div className="mt-8 divide-y divide-line overflow-hidden rounded-2xl border border-line bg-white px-4 shadow-sm sm:px-6">
             {items.map(({ product, quantity }) => {
               const compareAtPrice = product.compareAtPrice ?? product.price;
               const hasDiscount = compareAtPrice > product.price;
@@ -31,7 +31,15 @@ export default function Cart() {
                 <div className="min-w-0 flex-1">
                   <Link to={`/products/${product.slug}`} className="font-semibold hover:text-paddy">{product.name}</Link>
                   {product.packageSize && product.packageUnit && <p className="text-sm text-muted">{product.packageSize} {product.packageUnit}</p>}
-                  <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+                  <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm sm:hidden">
+                    {hasDiscount && <s className="text-xs text-muted">{formatPrice(compareAtPrice * quantity)}</s>}
+                    <span className="font-semibold text-ink">{formatPrice(product.price * quantity)}</span>
+                    {hasDiscount && <>
+                      <span className="text-xs font-medium text-paddy">Save {formatPrice((compareAtPrice - product.price) * quantity)}</span>
+                      <span className="rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-semibold text-paddy">{discount}% off</span>
+                    </>}
+                  </div>
+                  <div className="mt-1 hidden flex-wrap items-center gap-x-2 gap-y-1 text-sm sm:flex">
                     <span className="font-semibold text-ink">{formatPrice(product.price)} each</span>
                     {hasDiscount && (
                       <>
@@ -63,7 +71,7 @@ export default function Cart() {
                       <Plus size={16} />
                     </button>
                   </div>
-                  <div className="w-28 shrink-0 text-right">
+                  <div className="hidden w-28 shrink-0 text-right sm:block">
                   {hasDiscount && (
                     <s className="block text-xs text-muted">{formatPrice(compareAtPrice * quantity)}</s>
                   )}
@@ -80,7 +88,7 @@ export default function Cart() {
             );
             })}
           </div>
-          <div className="ml-auto mt-8 max-w-sm">
+          <div className="ml-auto mt-8 max-w-sm rounded-2xl border border-line bg-white p-5 shadow-sm">
             <p className="flex justify-between text-lg font-semibold"><span>Subtotal</span><span>{formatPrice(total)}</span></p>
             <p className="mt-2 text-sm text-muted">Delivery charge is calculated based on your state at checkout.</p>
             <Link to="/checkout" className="mt-6 block rounded bg-paddy px-6 py-3 text-center font-semibold uppercase tracking-wide text-white hover:bg-paddy-soft">Continue to checkout</Link>

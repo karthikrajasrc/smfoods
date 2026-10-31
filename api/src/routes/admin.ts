@@ -9,7 +9,7 @@ import { cloudinaryConfigured, cloudinaryImageBasePath } from "../config.js";
 import { Category } from "../models/Category.js";
 import { Order } from "../models/Order.js";
 import { Product } from "../models/Product.js";
-import { getStateDeliveryCharges, StoreSettings } from "../models/StoreSettings.js";
+import { DEFAULT_BRAND_CONTACT, getStateDeliveryCharges, StoreSettings } from "../models/StoreSettings.js";
 import { razorpay } from "../payments.js";
 import { requireAdmin, requireUser } from "../middleware/auth.js";
 import { enforceSameOrigin } from "../middleware/security.js";
@@ -50,6 +50,49 @@ const heroImagesSchema = z.object({
     context.addIssue({ code: z.ZodIssueCode.custom, path: ["heroMobileImages"], message: "Mobile images must match an existing desktop banner." });
   }
 });
+const brandContactSchema = z.object({
+  phone: z.string().trim().min(1).max(24).refine(
+    (phone) => /^\+91[6-9]\d{9}$/.test(phone.replace(/[\s-]/g, "")),
+    "Enter an Indian mobile number with the +91 country code and 10 digits.",
+  ),
+  email: z.string().trim().email().max(254),
+  address: z.string().trim().min(5).max(300),
+});
+
+router.get(
+  "/brand-contact",
+  asyncHandler(async (_req, res) => {
+    const settings = await StoreSettings.findById("storefront").select("brandPhone brandEmail brandAddress").lean();
+    res.json({
+      phone: settings?.brandPhone ?? DEFAULT_BRAND_CONTACT.phone,
+      email: settings?.brandEmail ?? DEFAULT_BRAND_CONTACT.email,
+      address: settings?.brandAddress ?? DEFAULT_BRAND_CONTACT.address,
+    });
+  }),
+);
+
+router.patch(
+  "/brand-contact",
+  validateBody(brandContactSchema),
+  asyncHandler(async (req, res) => {
+    const settings = await StoreSettings.findByIdAndUpdate(
+      "storefront",
+      {
+        $set: {
+          brandPhone: req.body.phone,
+          brandEmail: req.body.email,
+          brandAddress: req.body.address,
+        },
+      },
+      { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true },
+    );
+    res.json({
+      phone: settings.brandPhone,
+      email: settings.brandEmail,
+      address: settings.brandAddress,
+    });
+  }),
+);
 
 router.get(
   "/delivery-charge",

@@ -1,4 +1,5 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
+import { ImageOff } from "lucide-react";
 
 export function ImageWithLoader({
   src,
@@ -11,19 +12,35 @@ export function ImageWithLoader({
   className: string;
   loading?: "eager" | "lazy";
 }) {
-  const [loaded, setLoaded] = useState(false);
-  useEffect(() => setLoaded(false), [src]);
+  const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const loaded = loadedSrc === src;
+  const failed = failedSrc === src;
+
   return (
     <span className="relative block h-full w-full overflow-hidden">
-      {!loaded && <span aria-hidden="true" className="absolute inset-0 animate-pulse bg-brand-soft" />}
-      <img
-        src={src}
-        alt={alt}
-        loading={loading}
-        onLoad={() => setLoaded(true)}
-        onError={() => setLoaded(true)}
-        className={`${className} transition-opacity duration-200 ${loaded ? "opacity-100" : "opacity-0"}`}
-      />
+      {!loaded && !failed && <span aria-hidden="true" className="absolute inset-0 animate-pulse bg-brand-soft" />}
+      {failed && (
+        <span
+          role="img"
+          aria-label={alt ? `${alt} image unavailable` : "Image unavailable"}
+          className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-brand-soft text-muted"
+        >
+          <ImageOff size={28} strokeWidth={1.5} aria-hidden="true" />
+          <span className="text-xs">Image unavailable</span>
+        </span>
+      )}
+      {!failed && (
+        <img
+          key={src}
+          src={src}
+          alt={alt}
+          loading={loading}
+          onLoad={() => setLoadedSrc(src)}
+          onError={() => setFailedSrc(src)}
+          className={`${className} transition-opacity duration-200 ${loaded ? "opacity-100" : "opacity-0"}`}
+        />
+      )}
     </span>
   );
 }

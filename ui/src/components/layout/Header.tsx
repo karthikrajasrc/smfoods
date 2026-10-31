@@ -79,8 +79,8 @@ export default function Header() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-white">
-      <div className="mx-auto grid h-20 max-w-[1400px] grid-cols-[1fr_auto_1fr] items-center gap-2 px-3 sm:gap-4 sm:px-4 lg:grid-cols-[1fr_auto_1fr] lg:px-8">
+    <header className="sticky top-3 z-40 mx-3 my-3 sm:top-4 sm:mx-5 sm:my-4 lg:mx-8">
+      <div className="mx-auto grid h-16 max-w-[1400px] grid-cols-[1fr_auto_1fr] items-center gap-2 rounded-full border border-black/5 bg-white/95 px-3 shadow-[0_8px_30px_rgba(27,54,24,0.12)] backdrop-blur-md sm:h-20 sm:gap-4 sm:px-4 lg:grid-cols-[1fr_auto_1fr] lg:px-8">
         <div className="flex items-center gap-2">
           <button type="button" className={`${iconBtn} lg:hidden`} aria-label="Open menu" aria-controls="mobile-navigation" aria-expanded={menuMounted} onClick={openMenu}>
             <Menu />

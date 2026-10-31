@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { Fragment, useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { formatPrice } from "../data/products";
 import { useCart } from "../context/CartContext";
@@ -271,91 +271,91 @@ export default function Checkout() {
         <h1 className="font-display text-4xl font-bold text-paddy">Guest checkout</h1>
         <p className="mt-2 text-muted">No account is needed to place an order.</p>
         {(error || deliveryError) && <p role="alert" className="mt-5 rounded bg-red-50 p-4 text-red-800">{error || deliveryError}</p>}
-        <form id="checkout-form" onSubmit={submit} className="mt-8 grid gap-5 sm:grid-cols-2">
+        <form id="checkout-form" onSubmit={submit} className="checkout-form mt-8 grid gap-5 rounded-2xl border border-line bg-white p-5 shadow-md sm:grid-cols-2 sm:p-6">
           {fields.map((field) => (
-            <div key={field.key} className={field.key === "address" ? "sm:col-span-2" : ""}>
-              <label className="block text-sm font-medium">
-                <span className="mb-1 block">{field.label}</span>
-                {field.key === "state" ? (
-                  <select
-                    required
-                    autoComplete={field.autocomplete}
-                    value={customer.state}
-                    disabled={!deliveryCharges}
-                    onChange={(event) => setCustomer((current) => ({ ...current, state: event.target.value }))}
-                    className="w-full rounded border border-line bg-white px-3 py-3 focus:border-paddy disabled:bg-gray-100"
-                  >
-                    <option value="">Select your state / union territory</option>
-                    {deliveryCharges?.map(({ state }) => <option key={state} value={state}>{state}</option>)}
-                  </select>
-                ) : (
+            <Fragment key={field.key}>
+              {field.key === "address" && (
+                <div className="sm:col-start-2">
+                  <label htmlFor="whatsapp-phone" className="block text-sm font-medium">WhatsApp number</label>
                   <input
+                    id="whatsapp-phone"
                     required
-                    autoComplete={field.autocomplete}
-                    type={field.key === "email" ? "email" : field.key === "phone" ? "tel" : "text"}
-                    inputMode={field.key === "phone" ? "numeric" : undefined}
-                    pattern={field.key === "phone" ? "[0-9]{10}" : undefined}
-                    maxLength={field.key === "phone" ? 10 : undefined}
-                    title={field.key === "phone" ? "Enter exactly 10 digits." : undefined}
-                    value={customer[field.key]}
-                    readOnly={field.key === "country"}
-                    onChange={(event) => setCustomer((current) => ({ ...current, [field.key]: event.target.value }))}
-                    className="w-full rounded border border-line px-3 py-3 focus:border-paddy read-only:bg-gray-100"
+                    type="tel"
+                    inputMode="numeric"
+                    pattern="[0-9]{10}"
+                    maxLength={10}
+                    title="Enter exactly 10 digits."
+                    autoComplete="tel"
+                    value={whatsappSameAsPhone ? customer.phone : customer.whatsappPhone}
+                    disabled={whatsappSameAsPhone}
+                    onChange={(event) => setCustomer((current) => ({ ...current, whatsappPhone: event.target.value }))}
+                    className="mt-1 w-full rounded-xl border border-line bg-white px-3 py-3 focus:border-paddy disabled:bg-gray-100"
                   />
-                )}
-              </label>
-              {field.key === "phone" && (
-                <>
-                  <span className="mt-1 block text-xs text-muted">Enter a 10-digit mobile number without spaces or country code.</span>
-                  <div className="mt-2">
-                    <label htmlFor="whatsapp-phone" className="block text-sm font-medium">WhatsApp number</label>
+                  <label className="mt-2 inline-flex items-center gap-2 text-sm text-muted">
                     <input
-                      id="whatsapp-phone"
-                      required
-                      type="tel"
-                      inputMode="numeric"
-                      pattern="[0-9]{10}"
-                      maxLength={10}
-                      title="Enter exactly 10 digits."
-                      autoComplete="tel"
-                      value={whatsappSameAsPhone ? customer.phone : customer.whatsappPhone}
-                      disabled={whatsappSameAsPhone}
-                      onChange={(event) => setCustomer((current) => ({ ...current, whatsappPhone: event.target.value }))}
-                      className="mt-1 w-full rounded border border-line px-3 py-3 focus:border-paddy disabled:bg-gray-100"
+                      type="checkbox"
+                      checked={whatsappSameAsPhone}
+                      onChange={(event) => {
+                        const checked = event.target.checked;
+                        setWhatsappSameAsPhone(checked);
+                        if (!checked) {
+                          setCustomer((current) => ({ ...current, whatsappPhone: current.phone }));
+                        }
+                      }}
+                      className="size-4 accent-paddy"
                     />
-                    <label className="mt-2 inline-flex items-center gap-2 text-sm text-muted">
-                      <input
-                        type="checkbox"
-                        checked={whatsappSameAsPhone}
-                        onChange={(event) => {
-                          const checked = event.target.checked;
-                          setWhatsappSameAsPhone(checked);
-                          if (!checked) {
-                            setCustomer((current) => ({ ...current, whatsappPhone: current.phone }));
-                          }
-                        }}
-                        className="size-4 accent-paddy"
-                      />
-                      Use same phone number
-                    </label>
-                    <label className="mt-2 flex items-start gap-2 text-xs text-muted">
-                      <input
-                        type="checkbox"
-                        checked={whatsappOptIn}
-                        onChange={(event) => setWhatsappOptIn(event.target.checked)}
-                        className="mt-0.5 size-4 shrink-0 accent-paddy"
-                      />
-                      <span>I agree to receive my order confirmation and order updates on WhatsApp. This is optional.</span>
-                    </label>
-                  </div>
-                </>
+                    Use same phone number
+                  </label>
+                  <label className="mt-2 flex items-start gap-2 text-xs text-muted">
+                    <input
+                      type="checkbox"
+                      checked={whatsappOptIn}
+                      onChange={(event) => setWhatsappOptIn(event.target.checked)}
+                      className="mt-0.5 size-4 shrink-0 accent-paddy"
+                    />
+                    <span>I agree to receive my order confirmation and order updates on WhatsApp. This is optional.</span>
+                  </label>
+                </div>
               )}
-            </div>
+              <div className={field.key === "address" ? "sm:col-span-2" : ""}>
+                <label className="block text-sm font-medium">
+                  <span className="mb-1 block">{field.label}</span>
+                  {field.key === "state" ? (
+                    <select
+                      required
+                      autoComplete={field.autocomplete}
+                      value={customer.state}
+                      disabled={!deliveryCharges}
+                      onChange={(event) => setCustomer((current) => ({ ...current, state: event.target.value }))}
+                      className="w-full rounded-xl border border-line bg-white px-3 py-3 focus:border-paddy disabled:bg-gray-100"
+                    >
+                      <option value="">Select your state / union territory</option>
+                      {deliveryCharges?.map(({ state }) => <option key={state} value={state}>{state}</option>)}
+                    </select>
+                  ) : (
+                    <input
+                      required
+                      autoComplete={field.autocomplete}
+                      type={field.key === "email" ? "email" : field.key === "phone" ? "tel" : "text"}
+                      inputMode={field.key === "phone" ? "numeric" : undefined}
+                      pattern={field.key === "phone" ? "[0-9]{10}" : undefined}
+                      maxLength={field.key === "phone" ? 10 : undefined}
+                      title={field.key === "phone" ? "Enter exactly 10 digits." : undefined}
+                      value={customer[field.key]}
+                      readOnly={field.key === "country"}
+                      onChange={(event) => setCustomer((current) => ({ ...current, [field.key]: event.target.value }))}
+                      className="w-full rounded-xl border border-line bg-white px-3 py-3 focus:border-paddy read-only:bg-gray-100"
+                    />
+                  )}
+                </label>
+                {field.key === "phone" && <span className="mt-1 block text-xs text-muted">Enter a 10-digit mobile number without spaces or country code.</span>}
+              </div>
+            </Fragment>
           ))}
         </form>
       </div>
 
-      <aside className="h-fit rounded bg-brand-soft p-6">
+      <aside className="h-fit rounded-2xl border border-line bg-white p-6 shadow-md lg:mt-[7rem]">
         <h2 className="text-xl font-semibold">Order summary</h2>
         <ul className="mt-4 space-y-3">
           {items.map(({ product, quantity }) => (
@@ -368,8 +368,24 @@ export default function Checkout() {
         <p className="mt-2 flex justify-between text-sm"><span>Delivery{customer.state ? ` (${customer.state})` : ""}</span><span>{selectedDeliveryCharge === null ? (deliveryError ? "Unavailable" : customer.state ? "Loading…" : "Select a state") : formatPrice(selectedDeliveryCharge)}</span></p>
         <p className="mt-3 flex justify-between border-t border-line pt-3 font-bold"><span>Total</span><span>{selectedDeliveryCharge === null ? "—" : formatPrice(total + selectedDeliveryCharge)}</span></p>
         <Link to="/cart" className="mt-5 inline-block text-sm text-paddy underline">Return to cart</Link>
-        <button form="checkout-form" disabled={busy || selectedDeliveryCharge === null} type="submit" className="mt-6 w-full rounded bg-paddy px-6 py-3 font-semibold uppercase tracking-wide text-white hover:bg-paddy-soft disabled:opacity-60">
-          {busy ? <ButtonLoading>Starting secure payment…</ButtonLoading> : `Pay ${formatPrice(total + (selectedDeliveryCharge ?? 0))}`}
+        <button form="checkout-form" disabled={busy || selectedDeliveryCharge === null} type="submit" className="mt-6 flex min-h-14 w-full items-center justify-between gap-3 rounded-xl bg-paddy px-5 py-3 font-semibold uppercase tracking-wide text-white shadow-sm transition-colors hover:bg-paddy-soft disabled:opacity-60">
+          {busy ? <span className="mx-auto"><ButtonLoading>Starting secure payment…</ButtonLoading></span> : <>
+            <span>Pay {formatPrice(total + (selectedDeliveryCharge ?? 0))}</span>
+            <span className="flex shrink-0 items-center -space-x-1.5" aria-label="Accepted payment methods">
+              <span className="relative grid size-8 place-items-center overflow-hidden rounded-full border-2 border-paddy bg-white p-1">
+                <img src="/images/payments/google-pay.png" alt="Google Pay" className="size-full object-contain" />
+              </span>
+              <span className="relative z-10 grid size-8 place-items-center overflow-hidden rounded-full border-2 border-paddy bg-white p-1">
+                <img src="/images/payments/paytm.png" alt="Paytm" className="size-full object-contain" />
+              </span>
+              <span className="relative z-20 grid size-8 place-items-center overflow-hidden rounded-full border-2 border-paddy bg-white p-1">
+                <img src="/images/payments/phonepe.png" alt="PhonePe" className="size-full object-contain" />
+              </span>
+              <span className="relative z-30 grid size-8 place-items-center overflow-hidden rounded-full border-2 border-paddy bg-white p-1">
+                <img src="/images/payments/bhim.png" alt="BHIM" className="size-full object-contain" />
+              </span>
+            </span>
+          </>}
         </button>
       </aside>
     </section>

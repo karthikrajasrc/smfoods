@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { PackageSearch, Phone } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { apiRequest } from "../lib/api";
 import ScrollReveal from "../components/ui/ScrollReveal";
@@ -123,32 +124,32 @@ export default function TrackOrder() {
       <h1 className="font-display text-4xl font-bold text-paddy">Track your order</h1>
       <p className="mt-2 text-muted">Look up an order by its order number or list your active orders using your checkout phone number.</p>
 
-      <div className="mt-8 grid grid-cols-2 rounded-lg border border-line p-1" role="tablist" aria-label="Order lookup method">
-        <button type="button" role="tab" aria-selected={method === "order"} onClick={() => changeMethod("order")} className={`rounded px-3 py-3 text-sm font-semibold sm:text-base ${method === "order" ? "bg-paddy text-white" : "text-muted hover:bg-brand-soft"}`}>Order number</button>
-        <button type="button" role="tab" aria-selected={method === "phone"} onClick={() => changeMethod("phone")} className={`rounded px-3 py-3 text-sm font-semibold sm:text-base ${method === "phone" ? "bg-paddy text-white" : "text-muted hover:bg-brand-soft"}`}>Phone number</button>
+      <div className="mt-8 grid grid-cols-2 gap-1 rounded-2xl border border-line bg-white/70 p-1.5 shadow-sm" role="tablist" aria-label="Order lookup method">
+        <button type="button" role="tab" aria-selected={method === "order"} onClick={() => changeMethod("order")} className={`inline-flex items-center justify-center gap-2 rounded-xl px-3 py-3 text-sm font-semibold transition-colors sm:text-base ${method === "order" ? "bg-paddy text-white shadow-sm" : "text-muted hover:bg-brand-soft"}`}><PackageSearch size={18} aria-hidden="true" />Order number</button>
+        <button type="button" role="tab" aria-selected={method === "phone"} onClick={() => changeMethod("phone")} className={`inline-flex items-center justify-center gap-2 rounded-xl px-3 py-3 text-sm font-semibold transition-colors sm:text-base ${method === "phone" ? "bg-paddy text-white shadow-sm" : "text-muted hover:bg-brand-soft"}`}><Phone size={18} aria-hidden="true" />Phone number</button>
       </div>
 
-      <form onSubmit={submit} className="mt-4 grid gap-5 rounded-lg border border-line p-5 sm:p-6">
+      <form onSubmit={submit} className="mt-4 grid gap-5 rounded-2xl border border-line bg-white p-5 shadow-md sm:p-6">
         {method === "order" ? (
           <>
             <label className="text-sm font-medium">Order number
-              <input required pattern="SM-[0-9]{2}-(?:[A-Za-z0-9]{4}|[0-9]{5,})" placeholder="SM-26-1000" value={orderNumber} onChange={(event) => setOrderNumber(event.target.value)} className="mt-1 w-full rounded border border-line px-3 py-3 uppercase" />
+              <input required pattern="SM-[0-9]{2}-(?:[A-Za-z0-9]{4}|[0-9]{5,})" placeholder="SM-26-1000" value={orderNumber} onChange={(event) => setOrderNumber(event.target.value)} className="mt-1 w-full rounded-xl border border-line bg-white px-4 py-3 uppercase shadow-sm focus:border-paddy" />
             </label>
             <label className="text-sm font-medium">Email used at checkout
-              <input required type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} className="mt-1 w-full rounded border border-line px-3 py-3" />
+              <input required type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} className="mt-1 w-full rounded-xl border border-line bg-white px-4 py-3 shadow-sm focus:border-paddy" />
             </label>
           </>
         ) : (
           <label className="text-sm font-medium">Phone number used at checkout
-            <input required type="tel" inputMode="tel" maxLength={24} value={phone} onChange={(event) => setPhone(event.target.value)} className="mt-1 w-full rounded border border-line px-3 py-3" />
+            <input required type="tel" inputMode="tel" maxLength={24} value={phone} onChange={(event) => setPhone(event.target.value)} className="mt-1 w-full rounded-xl border border-line bg-white px-4 py-3 shadow-sm focus:border-paddy" />
             <span className="mt-1 block text-xs font-normal text-muted">Enter it exactly as provided when placing the order, including country code and spacing.</span>
           </label>
         )}
-        <button type="submit" disabled={loading} className="rounded bg-paddy px-5 py-3 font-semibold text-white hover:bg-paddy-soft disabled:opacity-60">{loading ? "Looking up orders…" : method === "order" ? "Track order" : "Find my orders"}</button>
+        <button type="submit" disabled={loading} className="rounded-xl bg-paddy px-5 py-3 font-semibold text-white shadow-sm transition-colors hover:bg-paddy-soft disabled:opacity-60">{loading ? "Looking up orders…" : method === "order" ? "Track order" : "Find my orders"}</button>
       </form>
 
-      {error && <p role="alert" className="mt-5 rounded bg-red-50 p-4 text-red-800">{error}</p>}
-      {lookup?.method === "phone" && !loading && !error && orders.length === 0 && <p role="status" className="mt-5 rounded border border-line p-4 text-muted">No active orders were found for that exact phone number.</p>}
+      {error && <p role="alert" className="mt-5 rounded-xl bg-red-50 p-4 text-red-800">{error}</p>}
+      {lookup?.method === "phone" && !loading && !error && orders.length === 0 && <p role="status" className="mt-5 rounded-xl border border-line bg-white p-4 text-muted shadow-sm">No active orders were found for that exact phone number.</p>}
 
       {orders.length > 0 && (
         <div className="mt-6 space-y-4">

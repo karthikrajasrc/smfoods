@@ -64,7 +64,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     },
     setQuantity(productId, quantity) {
       setItems((current) => quantity < 1
-        ? current.filter((item) => item.product.id !== productId)
+        ? current.filter((item) => cartLineId(item.product) !== productId)
         : current.map((item) => cartLineId(item.product) === productId
           ? { ...item, quantity: Math.min(50, quantity) }
           : item));

@@ -1,5 +1,6 @@
-import { Check } from "lucide-react";
+import { Check, Minus, Plus } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { cartLineId, discountPercent, formatPrice, type Product } from "../../data/products";
 import { useCart } from "../../context/CartContext";
@@ -8,23 +9,29 @@ import { ImageWithLoader } from "./Loading";
 interface Props { product: Product }
 
 export default function ProductCard({ product }: Props) {
-  const { add, items } = useCart();
+  const { add, items, setQuantity } = useCart();
   const reduceMotion = useReducedMotion();
-  const availableVariant = product.variants?.filter((variant) => variant.stock > 0).sort((a, b) => a.price - b.price)[0];
-  const displayedProduct = availableVariant ? {
+  const availableVariants = product.variants?.filter((variant) => variant.stock > 0) ?? [];
+  const initialVariant = [...availableVariants].sort((a, b) => a.price - b.price)[0];
+  const [selectedVariantId, setSelectedVariantId] = useState(initialVariant?.id);
+  const selectedVariant = availableVariants.find((variant) => variant.id === selectedVariantId) ?? initialVariant;
+  const displayedProduct = selectedVariant ? {
     ...product,
-    variantId: availableVariant.id,
-    packageSize: availableVariant.size,
-    packageUnit: availableVariant.unit,
-    price: availableVariant.price,
-    compareAtPrice: availableVariant.compareAtPrice,
-    stock: availableVariant.stock,
+    variantId: selectedVariant.id,
+    packageSize: selectedVariant.size,
+    packageUnit: selectedVariant.unit,
+    price: selectedVariant.price,
+    compareAtPrice: selectedVariant.compareAtPrice,
+    stock: selectedVariant.stock,
   } : product;
   const off = discountPercent(displayedProduct);
   const soldOut = product.variants?.length
-    ? !availableVariant
+    ? !selectedVariant
     : product.soldOut || product.stock === 0;
-  const addedToCart = items.some((item) => cartLineId(item.product) === cartLineId(displayedProduct));
+  const lineId = cartLineId(displayedProduct);
+  const cartItem = items.find((item) => cartLineId(item.product) === lineId);
+  const quantity = cartItem?.quantity ?? 0;
+  const maxQuantity = Math.min(50, displayedProduct.stock ?? 50);
 
   return (
     <motion.article
@@ -49,22 +56,68 @@ export default function ProductCard({ product }: Props) {
         <h3 className="line-clamp-2 text-base font-medium leading-tight sm:text-lg sm:leading-snug">
           <Link to={`/products/${product.slug}`} className="hover:text-paddy-soft">{product.name}</Link>
         </h3>
-        {product.variants?.length ? <p className="-mt-1 text-xs text-muted sm:text-sm">{product.variants.length} sizes available</p> : product.packageSize && product.packageUnit && <p className="-mt-1 text-xs text-muted sm:text-sm">{product.packageSize} {product.packageUnit}</p>}
+        {product.variants?.length ? (
+          <div className="-mt-1 flex flex-wrap gap-1.5" role="group" aria-label={`Choose a size for ${product.name}`}>
+            {product.variants.map((variant) => {
+              const isSelected = variant.id === selectedVariant?.id;
+              return (
+                <button
+                  key={variant.id}
+                  type="button"
+                  disabled={variant.stock < 1}
+                  aria-pressed={isSelected}
+                  onClick={() => setSelectedVariantId(variant.id)}
+                  className={`rounded border px-2 py-1 text-[11px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 sm:px-2.5 sm:text-xs ${isSelected ? "border-paddy bg-paddy text-white" : "border-line bg-white text-ink hover:border-paddy"}`}
+                >
+                  {variant.size} {variant.unit}
+                </button>
+              );
+            })}
+          </div>
+        ) : product.packageSize && product.packageUnit && <p className="-mt-1 text-xs text-muted sm:text-sm">{product.packageSize} {product.packageUnit}</p>}
         <div className="mt-auto">
           <p className="flex min-w-0 flex-wrap items-baseline gap-x-2">
-            <span className="text-lg font-bold text-paddy sm:text-xl">{product.variants?.length ? "From " : ""}{formatPrice(displayedProduct.price)}</span>
+            <span className="text-lg font-bold text-paddy sm:text-xl">{formatPrice(displayedProduct.price)}</span>
             {displayedProduct.compareAtPrice && <s className="text-xs text-muted sm:text-sm">{formatPrice(displayedProduct.compareAtPrice)}</s>}
           </p>
-          <button
-            type="button"
-            disabled={soldOut}
-            onClick={() => add(displayedProduct)}
-            aria-label={addedToCart ? `${product.name} added to cart` : `Add ${product.name} to cart`}
-            aria-live="polite"
-            className={`mt-3 flex h-8 w-full items-center justify-center gap-1 rounded-lg px-1 py-0 text-xs font-bold text-white transition-colors focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:h-9 sm:px-2 sm:text-sm ${addedToCart ? "bg-paddy" : "bg-ghee hover:bg-amber-600"}`}
-          >
-            {soldOut ? "Sold out" : addedToCart ? <><Check size={14} aria-hidden="true" /> Added to cart</> : "Add to cart"}
-          </button>
+          {quantity > 0 ? (
+            <div className="mt-3 flex items-center gap-2">
+              <span aria-live="polite" className="inline-flex h-9 min-w-0 shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-lg bg-paddy px-2 text-[11px] font-bold leading-none text-white sm:flex-1 sm:px-3 sm:text-sm">
+                <Check size={12} aria-hidden="true" />
+                Added
+              </span>
+              <div className="flex h-9 shrink-0 items-center rounded-lg border border-line bg-white sm:min-w-0 sm:flex-1 sm:justify-between sm:px-2">
+                <button
+                  type="button"
+                  onClick={() => setQuantity(lineId, quantity - 1)}
+                  aria-label={`Decrease ${product.name} ${displayedProduct.packageSize ?? ""} ${displayedProduct.packageUnit ?? ""} quantity`}
+                  className="grid h-full w-7 place-items-center text-ink hover:bg-brand-soft sm:w-auto sm:flex-1"
+                >
+                  <Minus size={14} aria-hidden="true" />
+                </button>
+                <span aria-label={`Quantity: ${quantity}`} className="min-w-5 text-center text-xs font-semibold sm:min-w-6 sm:text-sm">{quantity}</span>
+                <button
+                  type="button"
+                  onClick={() => add(displayedProduct)}
+                  disabled={quantity >= maxQuantity}
+                  aria-label={`Increase ${product.name} ${displayedProduct.packageSize ?? ""} ${displayedProduct.packageUnit ?? ""} quantity`}
+                  className="grid h-full w-7 place-items-center text-ink hover:bg-brand-soft disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto sm:flex-1"
+                >
+                  <Plus size={14} aria-hidden="true" />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              disabled={soldOut}
+              onClick={() => add(displayedProduct)}
+              aria-label={soldOut ? `${product.name} sold out` : `Add ${product.name} to cart`}
+              className="mt-3 flex h-8 w-full items-center justify-center rounded-lg bg-ghee px-1 py-0 text-xs font-bold text-white transition-colors hover:bg-amber-600 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:h-9 sm:px-2 sm:text-sm"
+            >
+              {soldOut ? "Sold out" : "Add to cart"}
+            </button>
+          )}
         </div>
       </div>
     </motion.article>

@@ -4,6 +4,7 @@ import { Navigate } from "react-router-dom";
 import { ButtonLoading, LoadingState } from "../components/ui/Loading";
 import ScrollReveal from "../components/ui/ScrollReveal";
 import { useAuth } from "../context/AuthContext";
+import { useBrandContact, type BrandContact } from "../context/BrandContactContext";
 import { formatPrice } from "../data/products";
 import { apiRequest } from "../lib/api";
 
@@ -49,7 +50,7 @@ interface AdminOrder {
   createdAt: string;
 }
 
-type AdminTab = "products" | "categories" | "orders" | "delivery" | "home-banner";
+type AdminTab = "products" | "categories" | "orders" | "delivery" | "home-banner" | "brand-contact";
 type Unit = "kg" | "g" | "L" | "ml";
 interface DispatchDetails { orderId: string; trackingUrl: string; trackingNumber: string }
 interface PendingConfirmation {
@@ -85,6 +86,7 @@ function recordId(product: AdminProduct) {
 
 export default function Admin() {
   const { user, loading } = useAuth();
+  const { brandContact, setBrandContact } = useBrandContact();
   const [tab, setTab] = useState<AdminTab>("products");
   const [categories, setCategories] = useState<AdminCategory[]>([]);
   const [products, setProducts] = useState<AdminProduct[]>([]);
@@ -97,6 +99,7 @@ export default function Admin() {
   const [orderToInput, setOrderToInput] = useState("");
   const [orderFilters, setOrderFilters] = useState({ name: "", from: "", to: "" });
   const [deliveryCharges, setDeliveryCharges] = useState<Array<{ state: string; amount: string }>>([]);
+  const [brandContactForm, setBrandContactForm] = useState<BrandContact>(brandContact);
   const [homeBannerImages, setHomeBannerImages] = useState<string[]>([]);
   const [homeBannerFiles, setHomeBannerFiles] = useState<File[]>([]);
   const [homeBannerPreviews, setHomeBannerPreviews] = useState<string[]>([]);
@@ -123,13 +126,14 @@ export default function Admin() {
     if (orderFilters.name) orderQuery.set("name", orderFilters.name);
     if (orderFilters.from) orderQuery.set("from", orderFilters.from);
     if (orderFilters.to) orderQuery.set("to", orderFilters.to);
-    const [categoryResult, productResult, orderResult, uploadStatus, deliveryResult, bannerResult] = await Promise.all([
+    const [categoryResult, productResult, orderResult, uploadStatus, deliveryResult, bannerResult, brandContactResult] = await Promise.all([
       apiRequest<{ categories: AdminCategory[] }>("/admin/categories"),
       apiRequest<{ products: AdminProduct[] }>("/admin/products"),
       apiRequest<{ orders: AdminOrder[]; pages: number; total: number }>(`/admin/orders?${orderQuery}`),
       apiRequest<{ configured: boolean }>("/admin/uploads/status"),
       apiRequest<{ deliveryCharges: Array<{ state: string; amount: number }> }>("/admin/delivery-charge"),
       apiRequest<{ heroImages: string[]; heroMobileImages: string[] }>("/admin/home-banner"),
+      apiRequest<BrandContact>("/admin/brand-contact"),
     ]);
     setCategories(categoryResult.categories);
     setProducts(productResult.products);
@@ -140,7 +144,9 @@ export default function Admin() {
     setDeliveryCharges(deliveryResult.deliveryCharges.map(({ state, amount }) => ({ state, amount: String(amount) })));
     setHomeBannerImages(bannerResult.heroImages);
     setHomeBannerMobileImages(bannerResult.heroMobileImages);
-  }, [orderFilters, orderPage]);
+    setBrandContactForm(brandContactResult);
+    setBrandContact(brandContactResult);
+  }, [orderFilters, orderPage, setBrandContact]);
 
   useEffect(() => {
     if (imageFiles.length === 0) {
@@ -319,6 +325,18 @@ export default function Admin() {
     }, "Delivery charges updated for all states and union territories.", "Save delivery charges for all states and union territories?");
   }
 
+  function submitBrandContact(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    runAction(async () => {
+      const savedContact = await apiRequest<BrandContact>("/admin/brand-contact", {
+        method: "PATCH",
+        body: JSON.stringify(brandContactForm),
+      });
+      setBrandContactForm(savedContact);
+      setBrandContact(savedContact);
+    }, "Brand contact details updated.", "Save the brand phone, email, and address?");
+  }
+
   function submitHomeBanner(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (homeBannerImages.length + homeBannerFiles.length > 3) {
@@ -429,7 +447,7 @@ export default function Admin() {
 
   return (
     <ScrollReveal>
-    <section className="mx-auto max-w-7xl px-4 py-10">
+    <section className="admin-dashboard mx-auto max-w-7xl px-4 py-10">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-sm font-semibold uppercase tracking-widest text-ghee">SM Foods</p>
@@ -443,23 +461,23 @@ export default function Admin() {
       {cloudinaryConfigured === false && <p role="status" className="mt-4 rounded bg-amber-50 p-4 text-amber-900">Cloudinary is not configured. Add your Cloudinary cloud name, API key, and API secret to <code>api/.env</code>, then restart the API to enable product and banner image uploads.</p>}
 
       <nav className="mt-8 flex flex-wrap gap-2 border-b border-line" aria-label="Admin sections">
-        {(["products", "categories", "orders", "delivery", "home-banner"] as const).map((value) => (
-          <button key={value} type="button" onClick={() => setTab(value)} className={`border-b-2 px-4 py-3 font-semibold capitalize ${tab === value ? "border-paddy text-paddy" : "border-transparent text-muted"}`}>{value === "home-banner" ? "Home banner" : value}</button>
+        {(["products", "categories", "orders", "delivery", "home-banner", "brand-contact"] as const).map((value) => (
+          <button key={value} type="button" onClick={() => setTab(value)} className={`rounded-t-lg border-b-2 bg-white px-4 py-3 font-semibold capitalize ${tab === value ? "border-paddy text-paddy" : "border-transparent text-muted hover:bg-white"}`}>{value === "home-banner" ? "Home banner" : value === "brand-contact" ? "Brand details" : value}</button>
         ))}
       </nav>
 
       {tab === "products" && (
         <div className="mt-8 space-y-8">
-          <form onSubmit={submitProduct} className="rounded-lg border border-line p-5">
+          <form onSubmit={submitProduct} className="rounded-xl border border-line bg-white p-5 shadow-sm">
             <h2 className="text-xl font-semibold">{editingProduct ? "Edit product" : "Add product"}</h2>
             <div className="mt-5 grid gap-4">
               <label className="text-sm font-medium">Name<input required value={productForm.name} onChange={(e) => setProductForm({ ...productForm, name: e.target.value })} className="mt-1 w-full rounded border border-line p-2" /></label>
               <label className="text-sm font-medium">Category<select required value={productForm.categoryId} onChange={(e) => setProductForm({ ...productForm, categoryId: e.target.value })} className="mt-1 w-full rounded border border-line bg-white p-2"><option value="">Select category</option>{categories.map((category) => <option key={category._id} value={category._id}>{category.name}</option>)}</select></label>
-              <div className="space-y-3 rounded border border-line p-4">
+              <div className="space-y-3 rounded-lg border border-line bg-white p-4">
                 <div className="flex items-center justify-between gap-3"><h3 className="font-semibold">Package sizes, prices & stock</h3><button type="button" onClick={() => setProductForm((current) => ({ ...current, variants: [...current.variants, { size: "", unit: "kg", price: "", compareAtPrice: "", stock: "0" }] }))} className="text-sm font-semibold text-paddy underline">Add size</button></div>
                 {productForm.variants.length === 0 && <p className="text-sm text-muted">Add at least one size, such as 500 ml, 1 L, or 1 kg.</p>}
                 {productForm.variants.map((variant, index) => (
-                  <fieldset key={variant._id ?? index} className="rounded border border-line p-3">
+                  <fieldset key={variant._id ?? index} className="rounded-lg border border-line bg-white p-3">
                     <legend className="px-1 text-sm font-medium">Size option {index + 1}</legend>
                     <div className="grid grid-cols-2 gap-3">
                       <label className="text-sm">Size<input required type="number" min="0.01" max="10000" step="0.01" value={variant.size} onChange={(event) => setProductForm((current) => ({ ...current, variants: current.variants.map((item, itemIndex) => itemIndex === index ? { ...item, size: event.target.value } : item) }))} className="mt-1 w-full rounded border border-line p-2" /></label>
@@ -523,8 +541,8 @@ export default function Admin() {
 
           <div>
           <h2 className="mb-3 text-xl font-semibold">All products ({products.length})</h2>
-          <div className="overflow-x-auto rounded-lg border border-line">
-            <table className="w-full min-w-[680px] text-left text-sm">
+          <div className="overflow-x-auto rounded-xl border border-line bg-white shadow-sm">
+            <table className="w-full min-w-[680px] bg-white text-left text-sm">
               <thead className="bg-brand-soft"><tr><th className="p-3">Product</th><th className="p-3">Category</th><th className="p-3">Price</th><th className="p-3">Stock</th><th className="p-3">Actions</th></tr></thead>
               <tbody className="divide-y divide-line">
                 {products.map((product) => (
@@ -543,25 +561,25 @@ export default function Admin() {
 
       {tab === "categories" && (
         <div className="mt-8 grid items-start gap-8 md:grid-cols-[minmax(260px,0.7fr)_1.3fr]">
-          <form onSubmit={submitCategory} className="rounded-lg border border-line p-5">
+          <form onSubmit={submitCategory} className="rounded-xl border border-line bg-white p-5 shadow-sm">
             <h2 className="text-xl font-semibold">{editingCategory ? "Edit category" : "Add category"}</h2>
             <label className="mt-5 block text-sm font-medium">Name<input required minLength={2} value={categoryForm.name} onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })} className="mt-1 w-full rounded border border-line p-2" /></label>
             <div className="mt-5 flex gap-3"><button disabled={busy} className="rounded bg-paddy px-5 py-3 font-semibold text-white">{busy ? <ButtonLoading>Saving…</ButtonLoading> : editingCategory ? "Save category" : "Add category"}</button>{editingCategory && <button type="button" onClick={() => { setEditingCategory(null); setCategoryForm({ name: "" }); }} className="rounded border border-line px-4">Cancel</button>}</div>
           </form>
-          <ul className="divide-y divide-line rounded-lg border border-line">
+          <ul className="divide-y divide-line rounded-xl border border-line bg-white shadow-sm">
             {categories.map((category) => <li key={category._id} className="flex items-center justify-between gap-4 p-4"><p className="font-semibold">{category.name}</p><div className="flex gap-3"><button type="button" disabled={busy} onClick={() => { setEditingCategory(category._id); setCategoryForm({ name: category.name }); }} className="text-paddy underline disabled:opacity-50">Edit</button><button type="button" disabled={busy} onClick={() => runAction(async () => { await apiRequest(`/admin/categories/${category._id}`, { method: "DELETE" }); }, "Category deleted.", `Delete the ${category.name} category?`)} className="text-red-700 underline disabled:opacity-50">{busy ? <ButtonLoading>Working…</ButtonLoading> : "Delete"}</button></div></li>)}
           </ul>
         </div>
       )}
 
       {tab === "delivery" && (
-        <form onSubmit={submitDeliveryCharge} className="mt-8 rounded-lg border border-line p-5">
+        <form onSubmit={submitDeliveryCharge} className="mt-8 rounded-xl border border-line bg-white p-5 shadow-sm">
           <h2 className="text-xl font-semibold">Delivery charges by state / union territory</h2>
           <p className="mt-2 text-sm text-muted">Set delivery charges in Indian rupees. The selected state’s rate is added to each new order and saved with it.</p>
           <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {deliveryCharges.map(({ state, amount }, index) => (
               <label key={state} className="text-sm font-medium">{state}
-                <span className="mt-1 flex items-center rounded border border-line px-3 focus-within:border-paddy">
+                <span className="mt-1 flex items-center rounded-lg border border-line bg-white px-3 focus-within:border-paddy">
                   <span className="text-muted">₹</span>
                   <input
                     required
@@ -582,13 +600,32 @@ export default function Admin() {
           <button type="submit" disabled={busy || deliveryCharges.length === 0} className="mt-5 rounded bg-paddy px-5 py-3 font-semibold text-white disabled:opacity-50">{busy ? <ButtonLoading>Saving…</ButtonLoading> : "Save all delivery charges"}</button>
         </form>
       )}
+      {tab === "brand-contact" && (
+        <form onSubmit={submitBrandContact} className="mt-8 max-w-2xl rounded-xl border border-line bg-white p-5 shadow-sm">
+          <h2 className="text-xl font-semibold">Brand contact details</h2>
+          <p className="mt-2 text-sm text-muted">These details are saved to the storefront database and shown across the website.</p>
+          <div className="mt-5 grid gap-4">
+            <label className="text-sm font-medium">Phone number
+              <input required type="tel" value={brandContactForm.phone} onChange={(event) => setBrandContactForm((current) => ({ ...current, phone: event.target.value }))} placeholder="+91 98765 43210" className="mt-1 w-full rounded border border-line p-2" />
+              <span className="mt-1 block text-xs font-normal text-muted">Include +91 and a valid 10-digit Indian mobile number.</span>
+            </label>
+            <label className="text-sm font-medium">Email
+              <input required type="email" value={brandContactForm.email} onChange={(event) => setBrandContactForm((current) => ({ ...current, email: event.target.value }))} className="mt-1 w-full rounded border border-line p-2" />
+            </label>
+            <label className="text-sm font-medium">Address
+              <textarea required rows={3} value={brandContactForm.address} onChange={(event) => setBrandContactForm((current) => ({ ...current, address: event.target.value }))} className="mt-1 w-full rounded border border-line p-2" />
+            </label>
+          </div>
+          <button type="submit" disabled={busy} className="mt-5 rounded bg-paddy px-5 py-3 font-semibold text-white disabled:opacity-50">{busy ? <ButtonLoading>Saving…</ButtonLoading> : "Save brand details"}</button>
+        </form>
+      )}
       {tab === "home-banner" && (
-        <form onSubmit={submitHomeBanner} className="mt-8 max-w-4xl rounded-lg border border-line p-5">
+        <form onSubmit={submitHomeBanner} className="mt-8 max-w-4xl rounded-xl border border-line bg-white p-5 shadow-sm">
           <h2 className="text-xl font-semibold">Home banner images</h2>
           <p className="mt-2 text-sm text-muted">Add up to 3 desktop slides. For each slide, you can optionally upload a separate image optimized for mobile screens. If no mobile image is set, the desktop image is used. JPEG, PNG, and WebP files up to 5 MB each are supported.</p>
           <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {bannerSlots.map(({ index, desktopImage, mobileImage }) => (
-              <article key={`banner-${index}`} className="rounded border border-line p-3">
+              <article key={`banner-${index}`} className="rounded-lg border border-line bg-white p-3">
                 <img src={desktopImage} alt={`Desktop home banner ${index + 1}`} className="aspect-video w-full rounded object-cover" />
                 <div className="mt-2 flex items-center justify-between gap-2 text-sm">
                   <span className="font-medium">Desktop banner {index + 1}</span>
@@ -655,7 +692,7 @@ export default function Admin() {
 
       {tab === "orders" && (
         <div className="mt-8 space-y-5">
-          <form onSubmit={applyOrderFilters} className="grid gap-4 rounded-lg border border-line p-4 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)_auto_auto] lg:items-end">
+          <form onSubmit={applyOrderFilters} className="grid gap-4 rounded-xl border border-line bg-white p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)_auto_auto] lg:items-end">
             <label className="text-sm font-medium">Customer name
               <input type="search" value={orderNameInput} onChange={(event) => setOrderNameInput(event.target.value)} placeholder="Search customer name" className="mt-1 w-full rounded border border-line px-3 py-2" />
             </label>
@@ -676,7 +713,7 @@ export default function Admin() {
               <button type="button" disabled={orderPage >= orderPages} onClick={() => setOrderPage((page) => page + 1)} className="rounded border border-line px-3 py-2 disabled:opacity-40">Next</button>
             </div>
           </div>
-          {orders.length === 0 && <p className="rounded border border-line p-6 text-muted">No orders yet.</p>}
+          {orders.length === 0 && <p className="rounded-xl border border-line bg-white p-6 text-muted shadow-sm">No orders yet.</p>}
           {orders.map((order) => {
             const options = order.paymentStatus === "refund_pending" || ["cancelled", "refunded"].includes(order.status)
               ? []
@@ -697,7 +734,7 @@ export default function Admin() {
               refunded: "Cancel order",
             };
             return (
-              <article key={order._id} className="rounded-lg border border-line p-5">
+              <article key={order._id} className="rounded-xl border border-line bg-white p-5 shadow-sm">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="min-w-0"><h2 className="break-all font-semibold">Order {order.orderNumber ?? order._id}</h2><p className="mt-1 text-sm text-muted">{new Date(order.createdAt).toLocaleString()} · {order.status} · payment {order.paymentStatus}</p></div>
                   <div className="text-right"><p className="text-xl font-bold text-paddy">{formatPrice(order.amount)}</p><p className="mt-1 text-xs text-muted">Items {formatPrice(order.subtotal ?? order.amount)} · Delivery {formatPrice(order.deliveryCharge ?? 0)}</p></div>

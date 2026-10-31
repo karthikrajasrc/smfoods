@@ -1,9 +1,12 @@
+import { useBrandContact } from "../context/BrandContactContext";
+
 const sectionClass = "mt-10";
 const headingClass = "mb-4 text-2xl font-semibold text-paddy";
 const paragraphClass = "mt-4 leading-7 text-[#3b3326]";
 const listClass = "mt-4 list-disc space-y-3 pl-6 leading-7 text-[#3b3326]";
 
 export default function ShippingPolicy() {
+  const { brandContact } = useBrandContact();
   return (
     <article className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
       <header className="border-b border-line pb-8">
@@ -70,8 +73,8 @@ export default function ShippingPolicy() {
         <p className={paragraphClass}>For any questions or assistance regarding shipping and delivery, please contact us:</p>
         <ul className={listClass}>
           <li><strong>Brand:</strong> SM Foods</li>
-          <li><strong>Email:</strong> <a className="text-paddy underline" href="mailto:smfoods2k25@gmail.com">smfoods2k25@gmail.com</a></li>
-          <li><strong>Location:</strong> 1/145 Indira Nagar 1st Street, Santhospuram, Chennai, TN 600073, India.</li>
+          <li><strong>Email:</strong> <a className="text-paddy underline" href={`mailto:${brandContact.email}`}>{brandContact.email}</a></li>
+          <li><strong>Location:</strong> {brandContact.address}</li>
         </ul>
         <p className={paragraphClass}>Thank you for choosing SM Foods. We appreciate your trust and look forward to serving you!</p>
       </section>

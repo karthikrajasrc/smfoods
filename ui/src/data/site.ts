@@ -1,8 +1,7 @@
 export const site = {
   name: "SM Foods",
   logo: "/images/logo.png",
-  phone: "8056 285 895",
-  whatsapp: "https://wa.me/918056285895",
+  phone: "+91 8056 285 895",
   email: "smfoods2k25@gmail.com",
   address:
     "1/145 Indira Nagar, 1st Street, Santhosapuram, Chennai, TN - 600073",

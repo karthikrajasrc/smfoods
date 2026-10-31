@@ -3,6 +3,7 @@ import { Facebook, Instagram, Mail, MapPin, Phone } from "lucide-react";
 import { Link } from "react-router-dom";
 import { policies, quickLinks, site } from "../../data/site";
 import { apiRequest } from "../../lib/api";
+import { brandPhoneHref, brandWhatsAppHref, useBrandContact } from "../../context/BrandContactContext";
 import { WhatsAppIcon } from "../ui/Icons";
 import ScrollReveal from "../ui/ScrollReveal";
 
@@ -19,6 +20,7 @@ const link = "block py-2 text-sm text-white hover:underline sm:text-base";
 const social = "grid h-11 w-11 place-items-center rounded-full border-2 border-white/90 text-white transition hover:bg-white/10";
 
 export default function Footer() {
+  const { brandContact } = useBrandContact();
   const [categories, setCategories] = useState<FooterCategory[]>([]);
 
   useEffect(() => {
@@ -61,13 +63,13 @@ export default function Footer() {
 
         <address className="not-italic lg:pl-6">
           <Heading>Follow Us</Heading>
-          <a href={`tel:${site.phone.replace(/\s/g, "")}`} className={`${link} flex items-center gap-3`}><Phone size={18} className="shrink-0" />{site.phone}</a>
-          <a href={`mailto:${site.email}`} className={`${link} flex items-center gap-3 break-all`}><Mail size={18} className="shrink-0" />{site.email}</a>
-          <p className="flex gap-3 py-2 text-sm sm:text-base"><MapPin size={18} className="mt-1 shrink-0" />{site.address}</p>
+          <a href={brandPhoneHref(brandContact.phone)} className={`${link} flex items-center gap-3`}><Phone size={18} className="shrink-0" />{brandContact.phone}</a>
+          <a href={`mailto:${brandContact.email}`} className={`${link} flex items-center gap-3 break-all`}><Mail size={18} className="shrink-0" />{brandContact.email}</a>
+          <p className="flex gap-3 py-2 text-sm sm:text-base"><MapPin size={18} className="mt-1 shrink-0" />{brandContact.address}</p>
           <div className="mt-4 flex gap-3">
             <a href={site.facebook} aria-label="Facebook" target="_blank" className={social}><Facebook size={20} /></a>
             <a href={site.instagram} aria-label="Instagram" target="_blank" className={social}><Instagram size={20} /></a>
-            <a href={site.whatsapp} aria-label="WhatsApp" target="_blank" className={social}><WhatsAppIcon size={20} /></a>
+            <a href={brandWhatsAppHref(brandContact.phone)} aria-label="WhatsApp" target="_blank" rel="noreferrer" className={social}><WhatsAppIcon size={20} /></a>
           </div>
         </address>
       </div>

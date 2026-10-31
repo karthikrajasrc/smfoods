@@ -158,27 +158,27 @@ export default function ProductDetails() {
             </div>
 
             <div className="mt-6 flex flex-wrap gap-4">
-              <div className="flex h-14 items-center border border-line">
+              <div className="flex h-14 items-center border border-line bg-white">
                 <button type="button" disabled={quantity <= 1} onClick={() => setQuantity((value) => Math.max(1, value - 1))} aria-label="Decrease quantity" className="grid h-full w-12 place-items-center disabled:opacity-40"><Minus size={16} /></button>
                 <span aria-live="polite" className="min-w-10 text-center">{quantity}</span>
                 <button type="button" disabled={quantity >= Math.min(stock, 50)} onClick={() => setQuantity((value) => Math.min(stock, 50, value + 1))} aria-label="Increase quantity" className="grid h-full w-12 place-items-center disabled:opacity-40"><Plus size={16} /></button>
               </div>
               <button type="button" disabled={soldOut} onClick={() => addToCart(false)} aria-live="polite" className={`flex h-10 min-h-0 flex-1 items-center justify-center gap-1.5 px-2 text-xs font-bold uppercase tracking-wide text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50 sm:h-11 sm:px-3 sm:text-sm ${addedToCart ? "bg-paddy" : "bg-amber-500 hover:bg-amber-600"}`}>{addedToCart ? <Check size={15} /> : <MdOutlineShoppingCart size={15} />} {addedToCart ? "Added to cart" : "Add to cart"}</button>
             </div>
-            <button type="button" disabled={soldOut} onClick={() => addToCart(true)} className="mt-5 min-h-14 w-full bg-black px-6 font-bold uppercase tracking-widest text-white hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-50">Buy it now</button>
+            <button type="button" disabled={soldOut} onClick={() => addToCart(true)} className="mt-5 min-h-14 w-full bg-ghee px-6 font-bold uppercase tracking-widest text-white hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-50">Buy it now</button>
           </div>
         </section>
       </div>
       </ScrollReveal>
       <ScrollReveal>
       <div className="mt-10 grid items-stretch gap-8 md:mt-12 md:grid-cols-2">
-        <section aria-labelledby="product-description" className="rounded border border-line bg-white p-5 md:p-8">
+        <section aria-labelledby="product-description" className="rounded-2xl border border-line bg-white p-5 shadow-md md:p-8">
           <h2 id="product-description" className="text-xl font-semibold">Description</h2>
           {product.description
-            ? <p className="mt-4 whitespace-pre-line leading-relaxed text-muted">{product.description}</p>
-            : <p className="mt-4 text-muted">No description available.</p>}
+            ? <p className="mt-4 whitespace-pre-line leading-relaxed text-ink/90">{product.description}</p>
+            : <p className="mt-4 text-ink/90">No description available.</p>}
         </section>
-        <section aria-labelledby="related-products-heading" className="rounded border border-line bg-white p-5 md:p-8">
+        <section aria-labelledby="related-products-heading" className="rounded-2xl border border-line bg-white p-5 shadow-md md:p-8">
           <h2 id="related-products-heading" className="text-xl font-semibold">Related products</h2>
           {relatedLoading ? (
             <div className="mt-5"><ProductGridSkeleton count={4} /></div>
@@ -189,7 +189,7 @@ export default function ProductDetails() {
               {relatedProducts.map((relatedProduct) => <ProductCard key={relatedProduct.id} product={relatedProduct} />)}
             </div>
           ) : (
-            <p className="mt-4 text-muted">No related products are available in this category yet.</p>
+            <p className="mt-4 text-ink/90">No related products are available in this category yet.</p>
           )}
         </section>
       </div>

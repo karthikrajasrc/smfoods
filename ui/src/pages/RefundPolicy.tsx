@@ -1,13 +1,12 @@
+import { useBrandContact } from "../context/BrandContactContext";
+
 const sectionClass = "mt-10";
 const headingClass = "mb-4 text-2xl font-semibold text-paddy";
 const paragraphClass = "mt-4 leading-7 text-[#3b3326]";
-const emailLink = (
-  <a className="text-paddy underline" href="mailto:smfoods2k25@gmail.com">
-    smfoods2k25@gmail.com
-  </a>
-);
 
 export default function RefundPolicy() {
+  const { brandContact } = useBrandContact();
+  const emailLink = <a className="text-paddy underline" href={`mailto:${brandContact.email}`}>{brandContact.email}</a>;
   return (
     <article className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
       <header className="border-b border-line pb-8">
@@ -23,7 +22,7 @@ export default function RefundPolicy() {
           To be eligible for a return, your item must be in the same condition that you received it, unworn or unused, with tags, and in its original packaging. You’ll also need the receipt or proof of purchase.
         </p>
         <p className={paragraphClass}>
-          To start a return, you can contact us at {emailLink}. Please note that returns will need to be sent to the following address: 1/145 Indira Nagar 1st Street, Santhospuram, Chennai, TN 600073, India.
+          To start a return, you can contact us at {emailLink}. Please note that returns will need to be sent to the following address: {brandContact.address}.
         </p>
         <p className={paragraphClass}>
           If your return is accepted, we’ll send you a return shipping label, as well as instructions on how and where to send your package. Items sent back to us without first requesting a return will not be accepted.

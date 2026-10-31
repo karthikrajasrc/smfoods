@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
+import { brandPhoneHref, useBrandContact } from "../context/BrandContactContext";
 
 const sectionClass = "mt-10";
 const headingClass = "mb-4 text-xl font-semibold text-paddy sm:text-2xl";
@@ -16,6 +17,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 }
 
 export default function TermsOfService() {
+  const { brandContact } = useBrandContact();
   return (
     <article className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
       <header className="border-b border-line pb-8">
@@ -261,14 +263,13 @@ export default function TermsOfService() {
       <Section title="Section 24 - Contact information">
         <p className="leading-7 text-[#3b3326]">
           Questions about the Terms of Service should be sent to us at{" "}
-          <a className={linkClass} href="mailto:smfoods2k25@gmail.com">smfoods2k25@gmail.com</a>.
+          <a className={linkClass} href={`mailto:${brandContact.email}`}>{brandContact.email}</a>.
         </p>
         <p className={paragraphClass}>Our contact information is posted below:</p>
         <address className={`${paragraphClass} not-italic`}>
           SM FOODS<br />
-          1/145 Indira Nagar, 1st Street, Santhosapuram,<br />
-          Chennai, TN - 600073, India<br />
-          <a className={linkClass} href="tel:+918056285895">+91 805 628 5895</a>
+          {brandContact.address}<br />
+          <a className={linkClass} href={brandPhoneHref(brandContact.phone)}>{brandContact.phone}</a>
         </address>
       </Section>
     </article>

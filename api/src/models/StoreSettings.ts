@@ -1,6 +1,12 @@
 import { model, Schema } from "mongoose";
 import { INDIAN_STATES } from "../data/indiaStates.js";
 
+export const DEFAULT_BRAND_CONTACT = {
+  phone: "+91 8056 285 895",
+  email: "smfoods2k25@gmail.com",
+  address: "1/145 Indira Nagar, 1st Street, Santhosapuram, Chennai, TN - 600073",
+} as const;
+
 const stateDeliveryChargeSchema = new Schema(
   {
     state: { type: String, enum: INDIAN_STATES, required: true },
@@ -15,6 +21,9 @@ const storeSettingsSchema = new Schema(
     deliveryCharges: { type: [stateDeliveryChargeSchema], default: [] },
     heroImages: { type: [String], default: [] },
     heroMobileImages: { type: [String], default: [] },
+    brandPhone: { type: String, trim: true, default: DEFAULT_BRAND_CONTACT.phone },
+    brandEmail: { type: String, trim: true, lowercase: true, default: DEFAULT_BRAND_CONTACT.email },
+    brandAddress: { type: String, trim: true, default: DEFAULT_BRAND_CONTACT.address },
   },
   { timestamps: true },
 );

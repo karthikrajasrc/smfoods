@@ -20,7 +20,7 @@ export default function SuperDeals() {
 
   return (
     <ScrollReveal>
-      <section className="mx-auto max-w-[1400px] px-4 py-12 sm:py-16 lg:px-8">
+      <section className="mx-auto max-w-[1400px] px-4 pb-12 pt-5 sm:pb-16 sm:pt-8 lg:px-8">
       <div className="mb-8 text-center sm:mb-10">
         <h2 className="text-2xl font-medium sm:text-3xl md:text-4xl">Super Deals</h2>
         <p className="mt-2 text-muted">Don't Miss Today's Featured Deals</p>
