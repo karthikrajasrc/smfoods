@@ -16,6 +16,8 @@ const envSchema = z.object({
   CLOUDINARY_API_KEY: z.string().trim().default(""),
   CLOUDINARY_API_SECRET: z.string().default(""),
   WHATSAPP_ACCESS_TOKEN: z.string().trim().default(""),
+  WHATSAPP_VERIFY_TOKEN: z.string().trim().default(""),
+  WHATSAPP_APP_SECRET: z.string().trim().default(""),
   WHATSAPP_PHONE_NUMBER_ID: z.string().trim().default(""),
   WHATSAPP_TEMPLATE_NAME: z.string().trim().default(""),
   WHATSAPP_TEMPLATE_LANGUAGE: z.string().trim().default("en"),

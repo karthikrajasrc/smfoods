@@ -6,6 +6,7 @@ import helmet from "helmet";
 import { config } from "./config.js";
 import { errorHandler, notFound } from "./middleware/errors.js";
 import { handleRazorpayWebhook } from "./routes/orders.js";
+import whatsappWebhookRoutes from "./routes/whatsappWebhook.js";
 import adminRoutes from "./routes/admin.js";
 import authRoutes from "./routes/auth.js";
 import catalogRoutes from "./routes/catalog.js";
@@ -45,6 +46,13 @@ app.post(
       next(error);
     }
   },
+);
+
+app.use(
+  "/api/webhooks/whatsapp",
+  webhookLimiter,
+  express.raw({ type: "application/json", limit: "64kb" }),
+  whatsappWebhookRoutes,
 );
 
 app.use(express.json({ limit: "32kb", strict: true }));

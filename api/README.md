@@ -39,6 +39,15 @@ After Razorpay confirms payment, the API sends an approved WhatsApp template mes
 
 The approved template must have four body placeholders, in this order: customer name, order number, item details, and total amount. For example: `Hi {{1}}, your SM Foods order {{2}} is confirmed. Items: {{3}}. Total paid: {{4}}. Thank you for shopping with us!` Submit it as a utility template and wait for Meta approval. Checkout asks the customer for optional WhatsApp consent; messages are sent only when they opt in. Keep the access token on the API server only; never use a `VITE_` variable. If WhatsApp settings are absent, order confirmation and payment processing still work, but the WhatsApp message is not sent. Admin order records show whether Meta accepted the confirmation request or it failed.
 
+### WhatsApp webhooks
+
+The callback endpoint is `https://<api-host>/api/webhooks/whatsapp`. Set these API environment variables in Render:
+
+- `WHATSAPP_VERIFY_TOKEN`: a private string you create; enter the exact same value in Meta's **Verify token** field. It is separate from the WhatsApp access token.
+- `WHATSAPP_APP_SECRET`: the App Secret from Meta App Dashboard → App settings → Basic. The API uses it to verify signed webhook POST requests.
+
+After deploying the API with these values, open the WhatsApp product's Webhooks configuration in Meta. Enter the callback URL and verify token, select **Verify and save**, then subscribe the WhatsApp Business Account to the `messages` field. POST deliveries are signature-checked and acknowledged; the API does not currently store or act on incoming messages or delivery-status events.
+
 Product image uploads are available to allowlisted admins at `/api/admin/uploads/product-image`. The API accepts JPEG, PNG, and WebP files up to 5 MB, checks the file signature, uploads through the server-side Cloudinary SDK to `smfoods/products`, and stores the returned secure Cloudinary URL on the product document. All three Cloudinary values must be set together; restart the API after changing them.
 
 Home banner images are managed from the admin dashboard. Admins can upload up to three desktop JPEG, PNG, or WebP images (5 MB each) at `/api/admin/uploads/banner-image` and optionally pair each with a separate mobile image. Validated Cloudinary URLs are saved in storefront settings through `PATCH /api/admin/home-banner` and served publicly with `GET /api/settings`; mobile slides fall back to their desktop image when no mobile image is configured.
