@@ -6,10 +6,11 @@ import { brandWhatsAppHref, useBrandContact } from "../../context/BrandContactCo
 import { WhatsAppIcon } from "../ui/Icons";
 
 export default function FloatingActions() {
-  const { count } = useCart();
+  const { items } = useCart();
+  const productCount = items.length;
   const { pathname } = useLocation();
   const { brandContact } = useBrandContact();
-  const showCartBar = count > 0 && pathname !== "/cart" && pathname !== "/checkout";
+  const showCartBar = productCount > 0 && pathname !== "/cart" && pathname !== "/checkout";
 
   return (
     <>
@@ -17,7 +18,7 @@ export default function FloatingActions() {
         <Link
           to="/cart"
           className="fixed inset-x-4 bottom-4 z-40 mx-auto flex min-h-16 max-w-xl items-center justify-between gap-3 rounded-full bg-paddy px-5 py-3 text-white shadow-[0_8px_30px_rgba(0,0,0,0.24)] transition hover:bg-paddy-soft focus-visible:outline-offset-4 md:bottom-5 md:rounded-2xl"
-          aria-label={`${count} ${count === 1 ? "item" : "items"} in cart. View cart.`}
+          aria-label={`${productCount} ${productCount === 1 ? "product" : "products"} in cart. View cart.`}
           aria-live="polite"
         >
           <span className="flex min-w-0 items-center gap-3">
@@ -25,7 +26,7 @@ export default function FloatingActions() {
               <MdOutlineShoppingCart size={20} className="text-paddy" aria-hidden="true" />
             </span>
             <span className="min-w-0">
-              <span className="block truncate text-sm font-bold">{count} {count === 1 ? "item" : "items"} added to cart</span>
+              <span className="block truncate text-sm font-bold">{productCount} {productCount === 1 ? "product" : "products"} added to cart</span>
               <span className="block text-xs text-white/85">View cart</span>
             </span>
           </span>
