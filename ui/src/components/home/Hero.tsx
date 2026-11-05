@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { apiRequest } from "../../lib/api";
+import ScrollReveal from "../ui/ScrollReveal";
 
 type BannerDevice = "desktop" | "mobile";
 
@@ -60,58 +61,58 @@ export default function Hero() {
   const bannerReady = images.length > 0 && loadedImages.has(images[activeIndex]);
 
   return (
-    <section
-      className="mx-5 mb-0 mt-4 overflow-hidden rounded-2xl sm:mb-1"
-      aria-label="SM Foods promotional banners"
-      aria-busy={loading || !bannerReady}
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onFocus={() => setPaused(true)}
-      onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) setPaused(false);
-      }}
-    >
-      <div className="relative overflow-hidden rounded-2xl bg-brand-soft">
-        <div
-          className="relative aspect-[16/9] overflow-hidden md:aspect-[4/1]"
-        >
-          <div
-            className="absolute inset-0 flex transition-transform duration-700 ease-in-out motion-reduce:transition-none"
-            style={{ transform: `translateX(-${activeIndex * 100}%)` }}
-            aria-live="off"
-          >
-            {images.map((image, index) => (
-              <img
-                key={`${image}-${index}`}
-                src={image}
-                alt={`SM Foods promotional banner ${index + 1}`}
-                fetchPriority={index === 0 ? "high" : "auto"}
-                onLoad={() => setLoadedImages((loaded) => new Set(loaded).add(image))}
-                onError={() => console.error(`Could not load home banner image: ${image}`)}
-                className={`h-full w-full flex-none object-cover transition-opacity duration-200 ${loadedImages.has(image) ? "opacity-100" : "opacity-0"}`}
-              />
-            ))}
+    <ScrollReveal delay={0}>
+      <section
+        className="mx-5 mb-0 mt-4 overflow-hidden rounded-2xl sm:mb-1"
+        aria-label="SM Foods promotional banners"
+        aria-busy={loading || !bannerReady}
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+        onFocus={() => setPaused(true)}
+        onBlur={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget)) setPaused(false);
+        }}
+      >
+        <div className="relative overflow-hidden rounded-2xl bg-brand-soft">
+          <div className="relative aspect-[16/9] overflow-hidden md:aspect-[4/1]">
+            <div
+              className="absolute inset-0 flex transition-transform duration-700 ease-in-out motion-reduce:transition-none"
+              style={{ transform: `translateX(-${activeIndex * 100}%)` }}
+              aria-live="off"
+            >
+              {images.map((image, index) => (
+                <img
+                  key={`${image}-${index}`}
+                  src={image}
+                  alt={`SM Foods promotional banner ${index + 1}`}
+                  fetchPriority={index === 0 ? "high" : "auto"}
+                  onLoad={() => setLoadedImages((loaded) => new Set(loaded).add(image))}
+                  onError={() => console.error(`Could not load home banner image: ${image}`)}
+                  className={`h-full w-full flex-none object-cover transition-opacity duration-200 ${loadedImages.has(image) ? "opacity-100" : "opacity-0"}`}
+                />
+              ))}
+            </div>
+            {!bannerReady && (
+              <div role="status" aria-label="Loading banner" className="absolute inset-0 animate-pulse bg-brand-soft" />
+            )}
           </div>
-          {!bannerReady && (
-            <div role="status" aria-label="Loading banner" className="absolute inset-0 animate-pulse bg-brand-soft" />
+
+          {images.length > 1 && (
+            <div className="absolute inset-x-0 bottom-3 flex justify-center gap-2" aria-label="Choose a banner">
+              {images.map((image, index) => (
+                <button
+                  key={`${image}-indicator`}
+                  type="button"
+                  aria-label={`Show banner ${index + 1}`}
+                  aria-current={index === activeIndex ? "true" : undefined}
+                  onClick={() => setActiveIndex(index)}
+                  className={`size-2.5 rounded-full border border-white shadow-sm transition ${index === activeIndex ? "bg-white" : "bg-white/45 hover:bg-white/80"}`}
+                />
+              ))}
+            </div>
           )}
         </div>
-
-        {images.length > 1 && (
-          <div className="absolute inset-x-0 bottom-3 flex justify-center gap-2" aria-label="Choose a banner">
-            {images.map((image, index) => (
-              <button
-                key={`${image}-indicator`}
-                type="button"
-                aria-label={`Show banner ${index + 1}`}
-                aria-current={index === activeIndex ? "true" : undefined}
-                onClick={() => setActiveIndex(index)}
-                className={`size-2.5 rounded-full border border-white shadow-sm transition ${index === activeIndex ? "bg-white" : "bg-white/45 hover:bg-white/80"}`}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-    </section>
+      </section>
+    </ScrollReveal>
   );
 }

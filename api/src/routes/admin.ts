@@ -189,6 +189,7 @@ function uploadToCloudinary(
 
 const categorySchema = z.object({
   name: z.string().trim().min(2).max(80),
+  iconImage: z.string().url().max(2048).refine(isCloudinaryImageUrl, "Upload the category icon to Cloudinary before saving.").optional(),
 });
 const productFields = {
   name: z.string().trim().min(2).max(160),
@@ -328,6 +329,37 @@ router.post(
   }),
 );
 
+router.post(
+  "/uploads/category-icon",
+  imageUpload.single("image"),
+  asyncHandler(async (req, res) => {
+    if (!cloudinaryConfigured) {
+      res.status(503).json({
+        error: "Image uploads are not configured. Set the Cloudinary credentials in api/.env and restart the API.",
+      });
+      return;
+    }
+    const file = req.file;
+    if (!file) {
+      res.status(400).json({ error: "Choose a category icon image." });
+      return;
+    }
+    const detectedType = await fileTypeFromBuffer(file.buffer);
+    if (!detectedType || !acceptedImageTypes.has(detectedType.mime)) {
+      res.status(400).json({ error: "Upload a valid JPEG, PNG, or WebP image." });
+      return;
+    }
+    let uploaded: { secureUrl: string; publicId: string };
+    try {
+      uploaded = await uploadToCloudinary(file.buffer, "smfoods/categories", { width: 400, height: 400 });
+    } catch (error) {
+      console.error("Cloudinary category icon upload failed:", error);
+      throw new HttpError("Cloudinary could not store the image. Verify its credentials and try again.", 502);
+    }
+    res.status(201).json({ url: uploaded.secureUrl, publicId: uploaded.publicId });
+  }),
+);
+
 router.get("/uploads/status", (_req, res) => {
   res.json({ configured: cloudinaryConfigured });
 });
@@ -349,7 +381,7 @@ router.post(
       res.status(400).json({ error: "Category name must contain letters or numbers." });
       return;
     }
-    const category = await Category.create({ name: req.body.name, slug });
+    const category = await Category.create({ name: req.body.name, slug, iconImage: req.body.iconImage });
     res.status(201).json({ category });
   }),
 );
@@ -364,6 +396,7 @@ router.patch(
     }
     const updates: Record<string, string> = {};
     if (req.body.name !== undefined) updates.name = req.body.name;
+    if (req.body.iconImage !== undefined) updates.iconImage = req.body.iconImage;
     if (req.body.name !== undefined) {
       const slug = slugify(req.body.name);
       if (!slug) {

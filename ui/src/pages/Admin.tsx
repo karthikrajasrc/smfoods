@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { X } from "lucide-react";
 import { Navigate } from "react-router-dom";
 import { ButtonLoading, LoadingState } from "../components/ui/Loading";
@@ -12,6 +12,7 @@ interface AdminCategory {
   _id: string;
   name: string;
   slug: string;
+  iconImage?: string;
 }
 
 interface AdminProduct {
@@ -113,7 +114,10 @@ export default function Admin() {
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [cloudinaryConfigured, setCloudinaryConfigured] = useState<boolean | null>(null);
   const [editingProduct, setEditingProduct] = useState<string | null>(null);
-  const [categoryForm, setCategoryForm] = useState({ name: "" });
+  const [categoryForm, setCategoryForm] = useState({ name: "", iconImage: "" });
+  const [categoryIconFile, setCategoryIconFile] = useState<File | null>(null);
+  const [categoryIconPreview, setCategoryIconPreview] = useState("");
+  const categoryIconInput = useRef<HTMLInputElement>(null);
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -167,6 +171,16 @@ export default function Admin() {
     setHomeBannerPreviews(previews);
     return () => previews.forEach((preview) => URL.revokeObjectURL(preview));
   }, [homeBannerFiles]);
+
+  useEffect(() => {
+    if (!categoryIconFile) {
+      setCategoryIconPreview("");
+      return;
+    }
+    const preview = URL.createObjectURL(categoryIconFile);
+    setCategoryIconPreview(preview);
+    return () => URL.revokeObjectURL(preview);
+  }, [categoryIconFile]);
 
   useEffect(() => {
     const previews = homeBannerMobileFiles.map((file) => file ? URL.createObjectURL(file) : null);
@@ -305,11 +319,23 @@ export default function Admin() {
   function submitCategory(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     runAction(async () => {
+      let iconImage = categoryForm.iconImage;
+      if (categoryIconFile) {
+        const formData = new FormData();
+        formData.append("image", categoryIconFile);
+        const upload = await apiRequest<{ url: string }>("/admin/uploads/category-icon", {
+          method: "POST",
+          body: formData,
+        });
+        iconImage = upload.url;
+      }
       await apiRequest(editingCategory ? `/admin/categories/${editingCategory}` : "/admin/categories", {
         method: editingCategory ? "PATCH" : "POST",
-        body: JSON.stringify({ name: categoryForm.name }),
+        body: JSON.stringify({ name: categoryForm.name, ...(iconImage ? { iconImage } : {}) }),
       });
-      setCategoryForm({ name: "" });
+      setCategoryForm({ name: "", iconImage: "" });
+      setCategoryIconFile(null);
+      if (categoryIconInput.current) categoryIconInput.current.value = "";
       setEditingCategory(null);
     }, editingCategory ? "Category updated." : "Category added.", editingCategory ? "Save these category changes?" : "Add this category?");
   }
@@ -564,10 +590,23 @@ export default function Admin() {
           <form onSubmit={submitCategory} className="rounded-xl border border-line bg-white p-5 shadow-sm">
             <h2 className="text-xl font-semibold">{editingCategory ? "Edit category" : "Add category"}</h2>
             <label className="mt-5 block text-sm font-medium">Name<input required minLength={2} value={categoryForm.name} onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })} className="mt-1 w-full rounded border border-line p-2" /></label>
-            <div className="mt-5 flex gap-3"><button disabled={busy} className="rounded bg-paddy px-5 py-3 font-semibold text-white">{busy ? <ButtonLoading>Saving…</ButtonLoading> : editingCategory ? "Save category" : "Add category"}</button>{editingCategory && <button type="button" onClick={() => { setEditingCategory(null); setCategoryForm({ name: "" }); }} className="rounded border border-line px-4">Cancel</button>}</div>
+            <label className="mt-5 block text-sm font-medium">Category icon (optional)
+              <input
+                ref={categoryIconInput}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={(event) => setCategoryIconFile(event.target.files?.[0] ?? null)}
+                className="mt-1 block w-full rounded border border-line p-2 text-sm"
+              />
+            </label>
+            {(categoryIconPreview || categoryForm.iconImage) && (
+              <img src={categoryIconPreview || categoryForm.iconImage} alt="Category icon preview" className="mt-3 size-16 rounded-full object-cover" />
+            )}
+            <p className="mt-2 text-xs text-muted">Upload a square JPEG, PNG, or WebP image up to 5 MB. It will appear in the round home-page category shortcut.</p>
+            <div className="mt-5 flex gap-3"><button disabled={busy} className="rounded bg-paddy px-5 py-3 font-semibold text-white">{busy ? <ButtonLoading>Saving…</ButtonLoading> : editingCategory ? "Save category" : "Add category"}</button>{editingCategory && <button type="button" onClick={() => { setEditingCategory(null); setCategoryForm({ name: "", iconImage: "" }); setCategoryIconFile(null); if (categoryIconInput.current) categoryIconInput.current.value = ""; }} className="rounded border border-line px-4">Cancel</button>}</div>
           </form>
           <ul className="divide-y divide-line rounded-xl border border-line bg-white shadow-sm">
-            {categories.map((category) => <li key={category._id} className="flex items-center justify-between gap-4 p-4"><p className="font-semibold">{category.name}</p><div className="flex gap-3"><button type="button" disabled={busy} onClick={() => { setEditingCategory(category._id); setCategoryForm({ name: category.name }); }} className="text-paddy underline disabled:opacity-50">Edit</button><button type="button" disabled={busy} onClick={() => runAction(async () => { await apiRequest(`/admin/categories/${category._id}`, { method: "DELETE" }); }, "Category deleted.", `Delete the ${category.name} category?`)} className="text-red-700 underline disabled:opacity-50">{busy ? <ButtonLoading>Working…</ButtonLoading> : "Delete"}</button></div></li>)}
+            {categories.map((category) => <li key={category._id} className="flex items-center justify-between gap-4 p-4"><div className="flex min-w-0 items-center gap-3">{category.iconImage ? <img src={category.iconImage} alt="" className="size-12 shrink-0 rounded-full object-cover" /> : <span aria-hidden="true" className="grid size-12 shrink-0 place-items-center rounded-full bg-brand-soft font-semibold text-paddy">{category.name.charAt(0).toUpperCase()}</span>}<p className="truncate font-semibold">{category.name}</p></div><div className="flex gap-3"><button type="button" disabled={busy} onClick={() => { setEditingCategory(category._id); setCategoryForm({ name: category.name, iconImage: category.iconImage ?? "" }); setCategoryIconFile(null); if (categoryIconInput.current) categoryIconInput.current.value = ""; }} className="text-paddy underline disabled:opacity-50">Edit</button><button type="button" disabled={busy} onClick={() => runAction(async () => { await apiRequest(`/admin/categories/${category._id}`, { method: "DELETE" }); }, "Category deleted.", `Delete the ${category.name} category?`)} className="text-red-700 underline disabled:opacity-50">{busy ? <ButtonLoading>Working…</ButtonLoading> : "Delete"}</button></div></li>)}
           </ul>
         </div>
       )}

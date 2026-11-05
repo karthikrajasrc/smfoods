@@ -50,6 +50,8 @@ After deploying the API with these values, open the WhatsApp product's Webhooks 
 
 Product image uploads are available to allowlisted admins at `/api/admin/uploads/product-image`. The API accepts JPEG, PNG, and WebP files up to 5 MB, checks the file signature, uploads through the server-side Cloudinary SDK to `smfoods/products`, and stores the returned secure Cloudinary URL on the product document. All three Cloudinary values must be set together; restart the API after changing them.
 
+Category icons are managed from the admin dashboard. Admins can upload a JPEG, PNG, or WebP icon up to 5 MB at `/api/admin/uploads/category-icon`; the validated Cloudinary URL is saved on the category and returned by `GET /api/categories` for the homepage shortcuts.
+
 Home banner images are managed from the admin dashboard. Admins can upload up to three desktop JPEG, PNG, or WebP images (5 MB each) at `/api/admin/uploads/banner-image` and optionally pair each with a separate mobile image. Validated Cloudinary URLs are saved in storefront settings through `PATCH /api/admin/home-banner` and served publicly with `GET /api/settings/banner?device=desktop` or `GET /api/settings/banner?device=mobile`; each request returns only the selected device's banner images.
 
 Products can have multiple package-size variants (`kg`, `g`, `L`, or `ml`), each with its own price, compare-at price, and stock. The product page offers size selection, and the selected variant is validated and priced by the API at checkout; its stock is decremented only after payment is confirmed. Admins can add up to five gallery images: one main image and four side thumbnails. Existing products without variants continue to use their product-level price and stock.
