@@ -9,7 +9,7 @@ const router = Router();
 router.get(
   "/categories",
   asyncHandler(async (_req, res) => {
-    const categories = await Category.find({ active: true }).sort({ name: 1 }).lean();
+    const categories = await Category.find({ active: true }).select("name slug").sort({ name: 1 }).lean();
     res.json({
       categories: categories.map((category) => ({
         id: category._id.toString(),

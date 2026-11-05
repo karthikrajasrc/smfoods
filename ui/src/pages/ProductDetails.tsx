@@ -6,7 +6,7 @@ import ProductCard from "../components/ui/ProductCard";
 import { ImageWithLoader, LoadingState, ProductGridSkeleton } from "../components/ui/Loading";
 import { useCart } from "../context/CartContext";
 import ScrollReveal from "../components/ui/ScrollReveal";
-import { formatPrice, type Product } from "../data/products";
+import { cartLineId, formatPrice, type Product } from "../data/products";
 import { apiRequest } from "../lib/api";
 
 function formatPackageSize(size: number, unit: string) {
@@ -17,7 +17,7 @@ function formatPackageSize(size: number, unit: string) {
 export default function ProductDetails() {
   const { slug = "" } = useParams();
   const navigate = useNavigate();
-  const { add, items: cartItems } = useCart();
+  const { add, items: cartItems, setQuantity: setCartQuantity } = useCart();
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [relatedError, setRelatedError] = useState("");
@@ -81,22 +81,25 @@ export default function ProductDetails() {
   const price = selectedVariant?.price ?? product?.price ?? 0;
   const compareAtPrice = selectedVariant?.compareAtPrice ?? product?.compareAtPrice;
   const soldOut = stock < 1;
-  const addedToCart = Boolean(product && cartItems.some((item) =>
-    item.product.id === product.id && item.product.variantId === selectedVariant?.id,
-  ));
+  const cartProduct = product ? {
+    ...product,
+    variantId: selectedVariant?.id,
+    packageSize: selectedVariant?.size ?? product.packageSize,
+    packageUnit: selectedVariant?.unit ?? product.packageUnit,
+    price,
+    compareAtPrice,
+    stock,
+    soldOut: false,
+  } : null;
+  const lineId = cartProduct ? cartLineId(cartProduct) : "";
+  const cartItem = cartItems.find((item) => cartLineId(item.product) === lineId);
+  const addedToCart = Boolean(cartItem);
+  const displayedQuantity = cartItem?.quantity ?? quantity;
+  const maxQuantity = Math.min(stock, 50);
 
   function addToCart(goToCheckout: boolean) {
     if (!product || soldOut || (product.variants?.length && !selectedVariant)) return;
-    add({
-      ...product,
-      variantId: selectedVariant?.id,
-      packageSize: selectedVariant?.size ?? product.packageSize,
-      packageUnit: selectedVariant?.unit ?? product.packageUnit,
-      price,
-      compareAtPrice,
-      stock,
-      soldOut: false,
-    }, quantity);
+    if (cartProduct && !cartItem) add(cartProduct, quantity);
     if (goToCheckout) {
       navigate("/checkout");
       return;
@@ -159,11 +162,36 @@ export default function ProductDetails() {
 
             <div className="mt-6 flex flex-wrap gap-4">
               <div className="flex h-14 items-center border border-line bg-white">
-                <button type="button" disabled={quantity <= 1} onClick={() => setQuantity((value) => Math.max(1, value - 1))} aria-label="Decrease quantity" className="grid h-full w-12 place-items-center disabled:opacity-40"><Minus size={16} /></button>
-                <span aria-live="polite" className="min-w-10 text-center">{quantity}</span>
-                <button type="button" disabled={quantity >= Math.min(stock, 50)} onClick={() => setQuantity((value) => Math.min(stock, 50, value + 1))} aria-label="Increase quantity" className="grid h-full w-12 place-items-center disabled:opacity-40"><Plus size={16} /></button>
+                <button
+                  type="button"
+                  disabled={displayedQuantity <= 1}
+                  onClick={() => addedToCart
+                    ? setCartQuantity(lineId, displayedQuantity - 1)
+                    : setQuantity((value) => Math.max(1, value - 1))}
+                  aria-label="Decrease quantity"
+                  className="grid h-full w-12 place-items-center disabled:opacity-40"
+                ><Minus size={16} /></button>
+                <span aria-live="polite" className="min-w-10 text-center">{displayedQuantity}</span>
+                <button
+                  type="button"
+                  disabled={displayedQuantity >= maxQuantity}
+                  onClick={() => addedToCart
+                    ? setCartQuantity(lineId, displayedQuantity + 1)
+                    : setQuantity((value) => Math.min(maxQuantity, value + 1))}
+                  aria-label="Increase quantity"
+                  className="grid h-full w-12 place-items-center disabled:opacity-40"
+                ><Plus size={16} /></button>
               </div>
-              <button type="button" disabled={soldOut} onClick={() => addToCart(false)} aria-live="polite" className={`flex h-10 min-h-0 flex-1 items-center justify-center gap-1.5 px-2 text-xs font-bold uppercase tracking-wide text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50 sm:h-11 sm:px-3 sm:text-sm ${addedToCart ? "bg-paddy" : "bg-amber-500 hover:bg-amber-600"}`}>{addedToCart ? <Check size={15} /> : <MdOutlineShoppingCart size={15} />} {addedToCart ? "Added to cart" : "Add to cart"}</button>
+              <button
+                type="button"
+                disabled={soldOut || addedToCart}
+                onClick={() => addToCart(false)}
+                aria-live="polite"
+                className={`flex h-10 min-h-0 flex-1 items-center justify-center gap-1.5 px-2 text-xs font-bold uppercase tracking-wide text-white transition-colors disabled:cursor-not-allowed disabled:opacity-100 sm:h-11 sm:px-3 sm:text-sm ${addedToCart ? "bg-paddy" : "bg-amber-500 hover:bg-amber-600 disabled:opacity-50"}`}
+              >
+                {addedToCart ? <Check size={15} /> : <MdOutlineShoppingCart size={15} />}
+                {addedToCart ? "Added to cart" : "Add to cart"}
+              </button>
             </div>
             <button type="button" disabled={soldOut} onClick={() => addToCart(true)} className="mt-5 min-h-14 w-full bg-ghee px-6 font-bold uppercase tracking-widest text-white hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-50">Buy it now</button>
           </div>

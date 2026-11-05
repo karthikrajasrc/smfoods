@@ -20,6 +20,7 @@ export default function Cart() {
         <>
           <div className="mt-8 divide-y divide-line overflow-hidden rounded-2xl border border-line bg-white px-4 shadow-sm sm:px-6">
             {items.map(({ product, quantity }) => {
+              const maxQuantity = Math.min(50, product.stock ?? 50);
               const compareAtPrice = product.compareAtPrice ?? product.price;
               const hasDiscount = compareAtPrice > product.price;
               const discount = hasDiscount
@@ -64,7 +65,7 @@ export default function Cart() {
                     <button
                       type="button"
                       onClick={() => setQuantity(cartLineId(product), quantity + 1)}
-                      disabled={quantity >= 50}
+                      disabled={quantity >= maxQuantity}
                       aria-label={`Increase quantity of ${product.name}`}
                       className="rounded-r p-2 text-muted hover:bg-brand-soft disabled:cursor-not-allowed disabled:opacity-40"
                     >

@@ -54,20 +54,26 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setItems((current) => {
         const key = cartLineId(product);
         const existing = current.find((item) => cartLineId(item.product) === key);
+        const maxQuantity = Math.min(50, product.stock ?? 50);
         if (existing) {
           return current.map((item) => cartLineId(item.product) === key
-            ? { product, quantity: Math.min(50, item.quantity + quantity) }
+            ? { product, quantity: Math.min(maxQuantity, item.quantity + quantity) }
             : item);
         }
-        return [...current, { product, quantity: Math.min(50, quantity) }];
+        return [...current, { product, quantity: Math.min(maxQuantity, quantity) }];
       });
     },
     setQuantity(productId, quantity) {
-      setItems((current) => quantity < 1
-        ? current.filter((item) => cartLineId(item.product) !== productId)
-        : current.map((item) => cartLineId(item.product) === productId
-          ? { ...item, quantity: Math.min(50, quantity) }
-          : item));
+      setItems((current) => {
+        const item = current.find(({ product }) => cartLineId(product) === productId);
+        if (quantity < 1) {
+          return current.filter(({ product }) => cartLineId(product) !== productId);
+        }
+        const maxQuantity = Math.min(50, item?.product.stock ?? 50);
+        return current.map((cartItem) => cartLineId(cartItem.product) === productId
+          ? { ...cartItem, quantity: Math.min(maxQuantity, quantity) }
+          : cartItem);
+      });
     },
     remove(productId) {
       setItems((current) => current.filter((item) => cartLineId(item.product) !== productId));
