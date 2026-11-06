@@ -11,6 +11,7 @@ const stateDeliveryChargeSchema = new Schema(
   {
     state: { type: String, enum: INDIAN_STATES, required: true },
     amount: { type: Number, required: true, min: 0, max: 1000000 },
+    enabled: { type: Boolean, default: false },
   },
   { _id: false },
 );
@@ -31,16 +32,21 @@ const storeSettingsSchema = new Schema(
 export const StoreSettings = model("StoreSettings", storeSettingsSchema);
 
 export async function getDeliveryCharge(state: string) {
-  const settings = await StoreSettings.findById("storefront").select("deliveryCharge deliveryCharges").lean();
+  const settings = await StoreSettings.findById("storefront").select("deliveryCharges").lean();
   const stateCharge = settings?.deliveryCharges?.find((charge) => charge.state === state);
-  return stateCharge?.amount ?? settings?.deliveryCharge ?? 0;
+  if (!stateCharge || stateCharge.enabled !== true) return null;
+  return stateCharge.amount;
 }
 
 export async function getStateDeliveryCharges() {
   const settings = await StoreSettings.findById("storefront").select("deliveryCharge deliveryCharges").lean();
-  const configuredCharges = new Map((settings?.deliveryCharges ?? []).map(({ state, amount }) => [state, amount]));
+  const configuredCharges = new Map((settings?.deliveryCharges ?? []).map(({ state, amount, enabled }) => [
+    state,
+    { amount, enabled: enabled ?? false },
+  ]));
   return INDIAN_STATES.map((state) => ({
     state,
-    amount: configuredCharges.get(state) ?? settings?.deliveryCharge ?? 0,
+    amount: configuredCharges.get(state)?.amount ?? settings?.deliveryCharge ?? 0,
+    enabled: configuredCharges.get(state)?.enabled ?? false,
   }));
 }

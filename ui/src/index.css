@@ -45,7 +45,7 @@
 
 html { scroll-behavior: smooth; }
 body { @apply font-sans text-ink antialiased; background-color: #f1f8ed; }
-:focus-visible { outline: 3px solid var(--color-amber); outline-offset: 2px; }
+:focus-visible { outline: 3px solid var(--color-paddy); outline-offset: 2px; }
 
 @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 .marquee-track { animation: marquee 40s linear infinite; }

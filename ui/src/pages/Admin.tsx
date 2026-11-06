@@ -99,7 +99,7 @@ export default function Admin() {
   const [orderFromInput, setOrderFromInput] = useState("");
   const [orderToInput, setOrderToInput] = useState("");
   const [orderFilters, setOrderFilters] = useState({ name: "", from: "", to: "" });
-  const [deliveryCharges, setDeliveryCharges] = useState<Array<{ state: string; amount: string }>>([]);
+  const [deliveryCharges, setDeliveryCharges] = useState<Array<{ state: string; amount: string; enabled: boolean }>>([]);
   const [brandContactForm, setBrandContactForm] = useState<BrandContact>(brandContact);
   const [homeBannerImages, setHomeBannerImages] = useState<string[]>([]);
   const [homeBannerFiles, setHomeBannerFiles] = useState<File[]>([]);
@@ -135,7 +135,7 @@ export default function Admin() {
       apiRequest<{ products: AdminProduct[] }>("/admin/products"),
       apiRequest<{ orders: AdminOrder[]; pages: number; total: number }>(`/admin/orders?${orderQuery}`),
       apiRequest<{ configured: boolean }>("/admin/uploads/status"),
-      apiRequest<{ deliveryCharges: Array<{ state: string; amount: number }> }>("/admin/delivery-charge"),
+      apiRequest<{ deliveryCharges: Array<{ state: string; amount: number; enabled: boolean }> }>("/admin/delivery-charge"),
       apiRequest<{ heroImages: string[]; heroMobileImages: string[] }>("/admin/home-banner"),
       apiRequest<BrandContact>("/admin/brand-contact"),
     ]);
@@ -145,7 +145,11 @@ export default function Admin() {
     setOrderPages(orderResult.pages);
     setOrderTotal(orderResult.total);
     setCloudinaryConfigured(uploadStatus.configured);
-    setDeliveryCharges(deliveryResult.deliveryCharges.map(({ state, amount }) => ({ state, amount: String(amount) })));
+    setDeliveryCharges(deliveryResult.deliveryCharges.map(({ state, amount, enabled }) => ({
+      state,
+      amount: String(amount),
+      enabled,
+    })));
     setHomeBannerImages(bannerResult.heroImages);
     setHomeBannerMobileImages(bannerResult.heroMobileImages);
     setBrandContactForm(brandContactResult);
@@ -342,9 +346,13 @@ export default function Admin() {
 
   function submitDeliveryCharge(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const configuredCharges = deliveryCharges.map(({ state, amount }) => ({ state, amount: Number(amount) }));
+    const configuredCharges = deliveryCharges.map(({ state, amount, enabled }) => ({
+      state,
+      amount: Number(amount),
+      enabled,
+    }));
     runAction(async () => {
-      await apiRequest<{ deliveryCharges: Array<{ state: string; amount: number }> }>("/admin/delivery-charge", {
+      await apiRequest<{ deliveryCharges: Array<{ state: string; amount: number; enabled: boolean }> }>("/admin/delivery-charge", {
         method: "PATCH",
         body: JSON.stringify({ deliveryCharges: configuredCharges }),
       });
@@ -614,26 +622,42 @@ export default function Admin() {
       {tab === "delivery" && (
         <form onSubmit={submitDeliveryCharge} className="mt-8 rounded-xl border border-line bg-white p-5 shadow-sm">
           <h2 className="text-xl font-semibold">Delivery charges by state / union territory</h2>
-          <p className="mt-2 text-sm text-muted">Set delivery charges in Indian rupees. The selected state’s rate is added to each new order and saved with it.</p>
+          <p className="mt-2 text-sm text-muted">Set delivery charges in Indian rupees and choose which states and union territories are available at checkout.</p>
           <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {deliveryCharges.map(({ state, amount }, index) => (
-              <label key={state} className="text-sm font-medium">{state}
-                <span className="mt-1 flex items-center rounded-lg border border-line bg-white px-3 focus-within:border-paddy">
-                  <span className="text-muted">₹</span>
-                  <input
-                    required
-                    type="number"
-                    min="0"
-                    max="1000000"
-                    step="1"
-                    value={amount}
-                    onChange={(event) => setDeliveryCharges((current) => current.map((charge, chargeIndex) =>
-                      chargeIndex === index ? { ...charge, amount: event.target.value } : charge,
-                    ))}
-                    className="w-full border-0 p-2 outline-none"
-                  />
-                </span>
-              </label>
+            {deliveryCharges.map(({ state, amount, enabled }, index) => (
+              <div key={state} className="text-sm font-medium">
+                <label htmlFor={`delivery-charge-${index}`} className="block">{state}</label>
+                <div className="mt-1 flex items-center gap-3">
+                  <span className="flex min-w-0 flex-1 items-center rounded-lg border border-line bg-white px-3 focus-within:border-paddy">
+                    <span className="text-muted">₹</span>
+                    <input
+                      id={`delivery-charge-${index}`}
+                      required
+                      type="number"
+                      min="0"
+                      max="1000000"
+                      step="1"
+                      value={amount}
+                      onChange={(event) => setDeliveryCharges((current) => current.map((charge, chargeIndex) =>
+                        chargeIndex === index ? { ...charge, amount: event.target.value } : charge,
+                      ))}
+                      className="w-full border-0 p-2 outline-none"
+                    />
+                  </span>
+                  <label className="flex shrink-0 items-center gap-1.5 text-xs font-normal">
+                    <input
+                      type="checkbox"
+                      checked={enabled}
+                      onChange={(event) => setDeliveryCharges((current) => current.map((charge, chargeIndex) =>
+                        chargeIndex === index ? { ...charge, enabled: event.target.checked } : charge,
+                      ))}
+                      aria-label={`Make ${state} available at checkout`}
+                      className="size-4 accent-paddy"
+                    />
+                    Checkout
+                  </label>
+                </div>
+              </div>
             ))}
           </div>
           <button type="submit" disabled={busy || deliveryCharges.length === 0} className="mt-5 rounded bg-paddy px-5 py-3 font-semibold text-white disabled:opacity-50">{busy ? <ButtonLoading>Saving…</ButtonLoading> : "Save all delivery charges"}</button>

@@ -325,7 +325,7 @@ export default function Checkout() {
                       required
                       autoComplete={field.autocomplete}
                       value={customer.state}
-                      disabled={!deliveryCharges}
+                      disabled={!deliveryCharges || deliveryCharges.length === 0}
                       onChange={(event) => setCustomer((current) => ({ ...current, state: event.target.value }))}
                       className="w-full rounded-xl border border-line bg-white px-3 py-3 focus:border-paddy disabled:bg-gray-100"
                     >
@@ -348,6 +348,9 @@ export default function Checkout() {
                     />
                   )}
                 </label>
+                {field.key === "state" && deliveryCharges?.length === 0 && (
+                  <span className="mt-1 block text-xs text-muted">Delivery is not currently available in any state or union territory.</span>
+                )}
                 {field.key === "phone" && <span className="mt-1 block text-xs text-muted">Enter a 10-digit mobile number without spaces or country code.</span>}
               </div>
             </Fragment>

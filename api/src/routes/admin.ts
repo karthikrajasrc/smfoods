@@ -31,6 +31,7 @@ const deliveryChargeSchema = z.object({
   deliveryCharges: z.array(z.object({
     state: z.enum(INDIAN_STATES),
     amount: z.number().int().min(0).max(1000000),
+    enabled: z.boolean(),
   })).length(INDIAN_STATES.length),
 }).superRefine(({ deliveryCharges }, context) => {
   const states = new Set(deliveryCharges.map(({ state }) => state));

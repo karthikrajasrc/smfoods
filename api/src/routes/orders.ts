@@ -221,6 +221,9 @@ router.post(
     });
     const subtotal = orderItems.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
     const deliveryCharge = await getDeliveryCharge(input.customer.state);
+    if (deliveryCharge === null) {
+      throw new HttpError("Delivery is not available for the selected state.", 400);
+    }
     const amount = subtotal + deliveryCharge;
     if (!Number.isSafeInteger(amount) || subtotal < 1 || amount > 10000000) {
       res.status(400).json({ error: "The order amount is invalid." });
